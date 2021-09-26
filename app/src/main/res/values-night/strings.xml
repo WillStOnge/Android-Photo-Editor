@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pick_image">Pick Image</string>
+    <string name="take_picture">Take Picture</string>
+    <string name="exit">Exit</string>
+    <string name="photo_content_desc">Image being edited.</string>
+</resources>
