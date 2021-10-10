@@ -2,6 +2,7 @@ package com.csc415.photoeditor.transform
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import com.csc415.photoeditor.util.findWhitestPixel
 import kotlin.math.min
 
 object Exposure : ITransformation
@@ -15,9 +16,8 @@ object Exposure : ITransformation
 	 */
 	override fun doTransformation(input: Bitmap): Bitmap
 	{
-		// Need to figure out how to auto select a pixel for reference.
-
-		return doTransformation(input, 0, 0);
+		val whitestPixel = findWhitestPixel(input)
+		return doTransformation(input, whitestPixel.first, whitestPixel.second)
 	}
 
 	/**
@@ -33,7 +33,7 @@ object Exposure : ITransformation
 	{
 		val adjust = Color.red(input.getPixel(pixelX, pixelY))
 
-		// If the pixel is already fully red, then we don't need to do anything.
+		// If the pixel is already 100% red, then we don't need to do anything.
 		if (adjust == 255)
 			return input
 
@@ -52,7 +52,7 @@ object Exposure : ITransformation
 				green = min(green + adjust, 0xff)
 				blue = min(blue + adjust, 0xff)
 
-				// Calculate the color from the parts.
+				// Calculate the color from the parts ((a << 24) | (r << 16) | (g << 8) | b).
 				input.setPixel(x, y, (alpha shl 24) or (red shl 16) or (green shl 8) or blue)
 			}
 		}
