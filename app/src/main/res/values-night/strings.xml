@@ -4,4 +4,5 @@
     <string name="take_picture">Take Picture</string>
     <string name="exit">Exit</string>
     <string name="photo_content_desc">Image being edited.</string>
+    <string name="share">Share</string>
 </resources>

@@ -11,6 +11,7 @@ import android.widget.ImageView
 class PhotoEditorActivity : AppCompatActivity()
 {
 	private val TAG = PhotoEditorActivity::class.java.simpleName
+	private lateinit var imageUri : Uri
 
 	override fun onCreate(savedInstanceState: Bundle?)
 	{
@@ -24,6 +25,7 @@ class PhotoEditorActivity : AppCompatActivity()
 			val imageUri = intent.getStringExtra(IntentExtraMessage.PHOTO_URI.extraName)
 			Log.d(TAG, imageUri.toString())
 			findViewById<ImageView>(R.id.photo).setImageURI(Uri.parse(imageUri))
+			this.imageUri = Uri.parse(imageUri)
 		}
 		else // Invalid intent.
 		{
@@ -32,6 +34,7 @@ class PhotoEditorActivity : AppCompatActivity()
 		}
 
 		setupExitButton()
+		setupShareButton()
 	}
 
 	/**
@@ -47,6 +50,27 @@ class PhotoEditorActivity : AppCompatActivity()
 		// Set the onClick behavior.
 		exitButton.setOnClickListener {
 			startActivity(Intent(this, MainActivity::class.java))
+		}
+	}
+
+	/**
+	 * Sets up the 'Share' button.
+	 *
+	 * @author Will St. Onge
+	 */
+	private fun setupShareButton()
+	{
+		// Setup view elements.
+		val shareButton = findViewById<Button>(R.id.share)
+
+		// Set the onClick behavior.
+		shareButton.setOnClickListener {
+			val intent = Intent(Intent.ACTION_SEND)
+			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+			intent.type = "image/*"
+			intent.putExtra(Intent.EXTRA_STREAM, imageUri)
+
+			startActivity(Intent.createChooser(intent, "Share to"))
 		}
 	}
 }

@@ -1,8 +1,10 @@
 package com.csc415.photoeditor.transform
 
-class Exposure : ITransformation
+import android.graphics.Bitmap
+
+object Exposure : ITransformation
 {
-	override fun doTransformation()
+	override fun doTransformation(input: Bitmap): Bitmap
 	{
 		TODO("Not yet implemented")
 	}
