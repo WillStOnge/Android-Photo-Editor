@@ -2,13 +2,24 @@ package com.csc415.photoeditor.transform
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import com.csc415.photoeditor.util.findWhitestPixel
 import kotlin.math.max
 
 object ColorBalance : ITransformation
 {
+	/**
+	 * Fixes the color balance on an image using a reference pixel found automatically.
+	 *
+	 * @param input The input image which will be color-balanced.
+	 *
+	 * @return The color-balanced image.
+	 *
+	 * @author Anthony Bosch
+	 */
 	override fun doTransformation(input: Bitmap): Bitmap
 	{
-		return doTransformation(input, 0, 0)
+		val whitestPixel = findWhitestPixel(input)
+		return doTransformation(input, whitestPixel.first, whitestPixel.second)
 	}
 
 	/**
@@ -19,6 +30,8 @@ object ColorBalance : ITransformation
 	 * @param pixelY Y coordinate of the pixel which will be used for reference.
 	 *
 	 * @return The balanced image.
+	 *
+	 * @author Anthony Bosch
 	 */
 	fun doTransformation(input: Bitmap, pixelX: Int, pixelY: Int): Bitmap
 	{
