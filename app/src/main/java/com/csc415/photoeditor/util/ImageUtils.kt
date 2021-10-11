@@ -9,6 +9,8 @@ import android.graphics.Color
  * @param input The input image which will be balanced.
  *
  * @return An array of the x and y coordinates of the optimal pixel, [x, y].
+ *
+ * @author Will St. Onge
  */
 fun findWhitestPixel(input: Bitmap): Pair<Int, Int>
 {

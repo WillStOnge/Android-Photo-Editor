@@ -13,6 +13,8 @@ object Exposure : ITransformation
 	 * @param input The input image which will be balanced.
 	 *
 	 * @return The exposure balanced image.
+	 *
+	 * @author Will St. Onge
 	 */
 	override fun doTransformation(input: Bitmap): Bitmap
 	{
@@ -28,6 +30,8 @@ object Exposure : ITransformation
 	 * @param pixelY Y coordinate of the pixel which will be used for reference.
 	 *
 	 * @return The exposure balanced image.
+	 *
+	 * @author Will St. Onge
 	 */
 	fun doTransformation(input: Bitmap, pixelX: Int, pixelY: Int): Bitmap
 	{

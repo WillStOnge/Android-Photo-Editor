@@ -1,5 +1,6 @@
 package com.csc415.photoeditor
 
+import android.app.Activity
 import android.content.Intent
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
@@ -42,6 +43,10 @@ class MainActivity : AppCompatActivity()
 	 */
 	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?)
 	{
+		// Checks for an not ok result.
+		if (resultCode != Activity.RESULT_OK)
+			return
+
 		when (requestCode)
 		{
 			RequestType.PICK_IMAGE_REQUEST.type ->
