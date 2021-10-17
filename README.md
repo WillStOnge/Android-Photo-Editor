@@ -7,3 +7,4 @@ Team consists of:
 - Trey Regruth
 - Alex Smithson
 - Anthony Bosch
+- Shawn Huesman
