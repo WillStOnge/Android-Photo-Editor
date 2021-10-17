@@ -18,9 +18,9 @@ fun findWhitestPixel(input: Bitmap): Pair<Int, Int>
 	var average = 0.0
 
 	// Go through each pixel in the image to find the whitest pixel.
-	for (x in 1..input.width)
+	for (x in 0 until input.width)
 	{
-		for (y in 1..input.height)
+		for (y in 0 until input.height)
 		{
 			val red = Color.red(input.getPixel(x, y))
 			val green = Color.green(input.getPixel(x, y))

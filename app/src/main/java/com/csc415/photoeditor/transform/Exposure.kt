@@ -33,7 +33,7 @@ object Exposure : ITransformation
 	 *
 	 * @author Will St. Onge
 	 */
-	fun doTransformation(input: Bitmap, pixelX: Int, pixelY: Int): Bitmap
+	private fun doTransformation(input: Bitmap, pixelX: Int, pixelY: Int): Bitmap
 	{
 		val adjust = Color.red(input.getPixel(pixelX, pixelY))
 
@@ -41,9 +41,9 @@ object Exposure : ITransformation
 		if (adjust == 255)
 			return input
 
-		for (x in 1..input.width)
+		for (x in 0 until input.width)
 		{
-			for (y in 1..input.height)
+			for (y in 0 until input.height)
 			{
 				// Get the parts of the pixel's color.
 				val alpha = Color.alpha(input.getPixel(x, y))
