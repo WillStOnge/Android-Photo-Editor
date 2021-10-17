@@ -1,17 +1,23 @@
 package com.csc415.photoeditor
 
 import android.content.Intent
-import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
+import androidx.appcompat.app.AppCompatActivity
+import java.io.File
+import java.io.FileInputStream
+
 
 class PhotoEditorActivity : AppCompatActivity()
 {
-	private val TAG = PhotoEditorActivity::class.java.simpleName
-	private lateinit var imageUri : Uri
+	private val tag = PhotoEditorActivity::class.java.simpleName
+	private lateinit var imageUri : String
 
 	override fun onCreate(savedInstanceState: Bundle?)
 	{
@@ -22,19 +28,37 @@ class PhotoEditorActivity : AppCompatActivity()
 		if (intent.extras!!.containsKey(IntentExtraMessage.PHOTO_URI.extraName))
 		{
 			// Photo URI was sent.
-			val imageUri = intent.getStringExtra(IntentExtraMessage.PHOTO_URI.extraName)
-			Log.d(TAG, imageUri.toString())
-			findViewById<ImageView>(R.id.photo).setImageURI(Uri.parse(imageUri))
-			this.imageUri = Uri.parse(imageUri)
+			imageUri = intent.getStringExtra(IntentExtraMessage.PHOTO_URI.extraName)!!
+			Log.d(tag, imageUri)
+
+			var bitmap = BitmapFactory.decodeStream(FileInputStream(File(imageUri)))
+			val exif = ExifInterface(imageUri)
+			val orientation: Int = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1)
+			val matrix = Matrix()
+
+			Log.d("EXIF", "Exif: $orientation")
+
+			// Make sure that the image rotation is correct. Sometimes it likes to be off +/- 90 degrees.
+			when (orientation)
+			{
+				6 -> matrix.postRotate(90F)
+				3 -> matrix.postRotate(180F)
+				8 -> matrix.postRotate(270F)
+			}
+
+			// Recreate the bitmap using the rotation matrix.
+			bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
 		}
 		else // Invalid intent.
 		{
-			Log.w(TAG, "No IMAGE_URI was sent with Intent, falling back to MainActivity")
+			Log.w(tag, "No IMAGE_URI was sent with Intent. Falling back to MainActivity")
 			startActivity(Intent(this, MainActivity::class.java))
 		}
 
 		setupExitButton()
 		setupShareButton()
+		//setupExposureButton()
 	}
 
 	/**
@@ -73,4 +97,24 @@ class PhotoEditorActivity : AppCompatActivity()
 			startActivity(Intent.createChooser(intent, "Share to"))
 		}
 	}
+
+	/*
+	/**
+	 * Sets up the 'Auto-Expose' button.
+	 *
+	 * @author Will St. Onge
+	 */
+	private fun setupExposureButton()
+	{
+		// Setup view elements.
+		val exposeButton = findViewById<Button>(R.id.expose)
+
+		exposeButton.setOnClickListener {
+			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
+			bitmap = bitmap.copy(bitmap.config, true)
+			bitmap = Exposure.doTransformation(bitmap)
+			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+		}
+	}
+	*/
 }

@@ -1,5 +1,6 @@
 package com.csc415.photoeditor
 
+import android.app.Activity
 import android.content.Intent
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
@@ -18,7 +19,7 @@ import java.util.Date
 
 class MainActivity : AppCompatActivity()
 {
-	private val TAG = MainActivity::class.java.simpleName
+	private val tag = MainActivity::class.java.simpleName
 	private lateinit var currentPhotoPath: String
 
 	/**
@@ -42,11 +43,15 @@ class MainActivity : AppCompatActivity()
 	 */
 	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?)
 	{
+		// Checks for an not ok result.
+		if (resultCode != Activity.RESULT_OK)
+			return
+
 		when (requestCode)
 		{
 			RequestType.PICK_IMAGE_REQUEST.type ->
 			{
-				Log.d(TAG, data?.data.toString())
+				Log.d(tag, data?.data.toString())
 
 				val intent = Intent(this, PhotoEditorActivity::class.java).apply {
 					putExtra(IntentExtraMessage.PHOTO_URI.extraName, data?.data.toString())
@@ -56,7 +61,7 @@ class MainActivity : AppCompatActivity()
 
 			RequestType.TAKE_PICTURE_REQUEST.type ->
 			{
-				Log.d(TAG, currentPhotoPath)
+				Log.d(tag, currentPhotoPath)
 
 				val intent = Intent(this, PhotoEditorActivity::class.java).apply {
 					putExtra(IntentExtraMessage.PHOTO_URI.extraName, currentPhotoPath)
@@ -113,7 +118,7 @@ class MainActivity : AppCompatActivity()
 						Toast.makeText(
 							applicationContext, "Unable to create file.", Toast.LENGTH_LONG
 						).show()
-						Log.w(TAG, e)
+						Log.w(tag, e)
 						null // Sets photoFile to null
 					}
 
