@@ -55,9 +55,9 @@ object ColorBalance : ITransformation
 		green -= lowColor
 
 		// Apply color differences to all pixes in the image.
-		for (x in 1..input.width)
+		for (x in 0 until input.width)
 		{
-			for (y in 1..input.height)
+			for (y in 0 until input.height)
 			{
 				// Get the current color of each pixel.
 				val alpha = Color.alpha(input.getPixel(x, y))
