@@ -11,6 +11,7 @@ import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import com.csc415.photoeditor.transform.ColorBalance
 import com.csc415.photoeditor.transform.Exposure
 import java.io.File
 import java.io.FileInputStream
@@ -61,6 +62,7 @@ class PhotoEditorActivity : AppCompatActivity()
 		setupExitButton()
 		setupShareButton()
 		setupExposureButton()
+		setupColorBalance()
 	}
 
 	/**
@@ -114,6 +116,24 @@ class PhotoEditorActivity : AppCompatActivity()
 			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 			bitmap = bitmap.copy(bitmap.config, true)
 			bitmap = Exposure.doTransformation(bitmap)
+			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+		}
+	}
+
+	/**
+	 * Sets up the 'Color-Balance' button
+	 *
+	 * @author Anthony Bosch
+	 */
+	private fun setupColorBalance()
+	{
+		// Setup view elements
+		val colorBalanceButton = findViewById<Button>(R.id.balance)
+
+		colorBalanceButton.setOnClickListener {
+			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
+			bitmap = bitmap.copy(bitmap.config, true)
+			bitmap = ColorBalance.doTransformation(bitmap)
 			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
 		}
 	}
