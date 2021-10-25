@@ -41,25 +41,29 @@ object Exposure : ITransformation
 		if (adjust == 255)
 			return input
 
-		for (x in 0 until input.width)
+		val width = input.width
+		val height = input.height
+		val pixels = IntArray(input.width * input.height)
+
+		input.getPixels(pixels, 0, width, 0, 0, width, height)
+
+		for (i in 0 until input.width * input.height)
 		{
-			for (y in 0 until input.height)
-			{
-				// Get the parts of the pixel's color.
-				val alpha = Color.alpha(input.getPixel(x, y))
-				var red = Color.red(input.getPixel(x, y))
-				var green = Color.green(input.getPixel(x, y))
-				var blue = Color.blue(input.getPixel(x, y))
+			// Get the parts of the pixel's color.
+			var red = Color.red(pixels[i])
+			var green = Color.green(pixels[i])
+			var blue = Color.blue(pixels[i])
 
-				// Calculate the new RGB values with the adjust (max 255).
-				red = min(red + adjust, 0xff)
-				green = min(green + adjust, 0xff)
-				blue = min(blue + adjust, 0xff)
+			// Calculate the new RGB values with the adjust (max 255).
+			red = min(red + adjust, 0xff)
+			green = min(green + adjust, 0xff)
+			blue = min(blue + adjust, 0xff)
 
-				// Calculate the color from the parts ((a << 24) | (r << 16) | (g << 8) | b).
-				input.setPixel(x, y, (alpha shl 24) or (red shl 16) or (green shl 8) or blue)
-			}
+			// Calculate the color from its parts.
+			pixels[i] = (Color.alpha(pixels[i]) shl 24) or (red shl 16) or (green shl 8) or blue
 		}
+
+		input.setPixels(pixels, 0, width, 0,0, width, height)
 
 		return input
 	}
