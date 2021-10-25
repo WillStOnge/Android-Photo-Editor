@@ -4,12 +4,14 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.graphics.drawable.BitmapDrawable
 import android.media.ExifInterface
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import com.csc415.photoeditor.transform.Exposure
 import java.io.File
 import java.io.FileInputStream
 
@@ -58,7 +60,7 @@ class PhotoEditorActivity : AppCompatActivity()
 
 		setupExitButton()
 		setupShareButton()
-		//setupExposureButton()
+		setupExposureButton()
 	}
 
 	/**
@@ -98,7 +100,6 @@ class PhotoEditorActivity : AppCompatActivity()
 		}
 	}
 
-	/*
 	/**
 	 * Sets up the 'Auto-Expose' button.
 	 *
@@ -116,5 +117,4 @@ class PhotoEditorActivity : AppCompatActivity()
 			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
 		}
 	}
-	*/
 }
