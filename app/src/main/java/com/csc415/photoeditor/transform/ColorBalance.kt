@@ -33,11 +33,16 @@ object ColorBalance : ITransformation
 	 *
 	 * @author Anthony Bosch
 	 */
-	fun doTransformation(input: Bitmap, pixelX: Int, pixelY: Int): Bitmap
+	private fun doTransformation(input: Bitmap, pixelX: Int, pixelY: Int): Bitmap
 	{
 		var red = Color.red(input.getPixel(pixelX, pixelY))
 		var blue = Color.blue(input.getPixel(pixelX, pixelY))
 		var green = Color.green(input.getPixel(pixelX, pixelY))
+
+		val width = input.width
+		val height = input.height
+		val pixels = IntArray(input.width * input.height)
+
 
 		// If the color balance is equal, then skip this step.
 		if (red == blue && blue == green)
@@ -54,26 +59,26 @@ object ColorBalance : ITransformation
 		blue -= lowColor
 		green -= lowColor
 
+		input.getPixels(pixels, 0, width, 0, 0, width, height)
+
+		var currentRed: Int
+		var currentBlue: Int
+		var currentGreen: Int
+
 		// Apply color differences to all pixes in the image.
-		for (x in 0 until input.width)
+		for (i in 0 until input.width * input.height)
 		{
-			for (y in 0 until input.height)
-			{
-				// Get the current color of each pixel.
-				val alpha = Color.alpha(input.getPixel(x, y))
-				var currentRed = Color.red(input.getPixel(x, y))
-				var currentGreen = Color.green(input.getPixel(x, y))
-				var currentBlue = Color.blue(input.getPixel(x, y))
+			// Calculate the new RGB values with the adjust (min 0)
+			currentRed = max(Color.red(pixels[i]) - red, 0)
+			currentBlue = max(Color.blue(pixels[i]) - blue, 0)
+			currentGreen = max(Color.green(pixels[i]) - green, 0)
 
-				// Calculate the new RGB values with the adjust (min 0)
-				currentRed = max(currentRed - red, 0)
-				currentBlue = max(currentBlue - blue, 0)
-				currentGreen = max(currentGreen - green, 0)
+			pixels[i] = (Color.alpha(pixels[i]) shl 24) or (currentRed shl 16) or (currentGreen shl 8) or currentBlue
 
-				// Calculate the color from the parts.
-				input.setPixel(x, y, (alpha shl 24) or (currentRed shl 16) or (currentGreen shl 8) or currentBlue)
-			}
 		}
+
+		input.setPixels(pixels, 0, width, 0, 0, width, height)
+
 		return input
 	}
 }
