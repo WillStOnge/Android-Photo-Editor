@@ -23,7 +23,7 @@ const val PHOTO_URI = "com.csc415.photoeditor.photo_uri"
 
 class MainActivity : AppCompatActivity()
 {
-	private val tag = MainActivity::class.java.simpleName
+	private val tag = this::class.java.simpleName
 	private lateinit var currentPhotoPath: String
 
 	private val getContent = registerForActivityResult(GetContent())
