@@ -8,13 +8,13 @@ object ColorInvert : ITransformation
 
 	override fun doTransformation(input: Bitmap): Bitmap
 	{
-		var inversionBitmap: Bitmap = input.copy(Bitmap.Config.ARGB_8888, true)
+		val inversionBitmap: Bitmap = input.copy(Bitmap.Config.ARGB_8888, true)
 
 		val width: Int = inversionBitmap.width
 		val height: Int = inversionBitmap.height
 		val pixelCount: Int = width * height
 
-		var pixels = IntArray(pixelCount)
+		val pixels = IntArray(pixelCount)
 		inversionBitmap.getPixels(pixels, 0, width, 0, 0, width, height)
 
 		for (i in 0..pixelCount) {
