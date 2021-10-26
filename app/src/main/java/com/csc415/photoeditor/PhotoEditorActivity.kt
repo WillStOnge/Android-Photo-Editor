@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.graphics.drawable.BitmapDrawable
-import android.media.ExifInterface
+import androidx.exifinterface.media.ExifInterface
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -17,7 +17,6 @@ import com.csc415.photoeditor.transform.Exposure
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
-
 
 class PhotoEditorActivity : AppCompatActivity()
 {
@@ -31,10 +30,10 @@ class PhotoEditorActivity : AppCompatActivity()
 		setContentView(R.layout.activity_photo_editor)
 
 		// Get intent extra for the photo uri.
-		if (intent.extras!!.containsKey(IntentExtraMessage.PHOTO_URI.extraName))
+		if (intent.extras!!.containsKey(PHOTO_URI))
 		{
 			// Photo URI was sent.
-			imageUri = intent.getStringExtra(IntentExtraMessage.PHOTO_URI.extraName)!!
+			imageUri = intent.getStringExtra(PHOTO_URI)!!
 			Log.d(tag, imageUri)
 
 			try {
@@ -42,8 +41,6 @@ class PhotoEditorActivity : AppCompatActivity()
 				val exif = ExifInterface(imageUri)
 				val orientation: Int = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1)
 				val matrix = Matrix()
-
-				Log.d("EXIF", "Exif: $orientation")
 
 				// Make sure that the image rotation is correct. Sometimes it likes to be off +/- 90 degrees.
 				when (orientation)
