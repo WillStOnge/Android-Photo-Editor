@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.graphics.drawable.BitmapDrawable
-import androidx.exifinterface.media.ExifInterface
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -17,11 +17,12 @@ import com.csc415.photoeditor.transform.Exposure
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
+import java.io.InputStream
 
 class PhotoEditorActivity : AppCompatActivity()
 {
 	private val tag = this::class.java.simpleName
-	private lateinit var imageUri : String
+	private lateinit var imageUri: String
 	private lateinit var bitmap: Bitmap
 
 	override fun onCreate(savedInstanceState: Bundle?)
@@ -34,36 +35,49 @@ class PhotoEditorActivity : AppCompatActivity()
 		{
 			// Photo URI was sent.
 			imageUri = intent.getStringExtra(PHOTO_URI)!!
-			Log.d(tag, imageUri)
 
-			try {
-				bitmap = BitmapFactory.decodeStream(FileInputStream(File(imageUri)))
-				val exif = ExifInterface(imageUri)
-				val orientation: Int = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1)
+			try
+			{
+				// If the Uri is from the content scheme, open with the content resolver, otherwise, just use a FileInputStream.
+				val stream: InputStream = if (imageUri.contains("content://")) contentResolver.openInputStream(
+					Uri.parse(imageUri)
+				)!!
+				else FileInputStream(File(imageUri))
+
+				bitmap = BitmapFactory.decodeStream(stream)
 				val matrix = Matrix()
 
-				// Make sure that the image rotation is correct. Sometimes it likes to be off +/- 90 degrees.
-				when (orientation)
-				{
-					6 -> matrix.postRotate(90F)
-					3 -> matrix.postRotate(180F)
-					8 -> matrix.postRotate(270F)
-				}
+				// Make sure that the image rotation is correct.
+				matrix.postRotate(90F)
 
 				// Recreate the bitmap using the rotation matrix.
-				bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+				bitmap = Bitmap.createBitmap(
+					bitmap,
+					0,
+					0,
+					bitmap.width,
+					bitmap.height,
+					matrix,
+					true
+				)
 				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
-			} catch (e: FileNotFoundException) {
-				Log.e(tag, "Image file not found. Falling back to MainActivity", e)
+			}
+			catch (e: FileNotFoundException)
+			{
+				Log.e(tag, "Failed to load image $imageUri. Falling back to MainActivity.", e)
 				startActivity(Intent(this, MainActivity::class.java))
-				val toast = Toast.makeText(applicationContext, "File Not Found", Toast.LENGTH_LONG)
+				val toast = Toast.makeText(
+					applicationContext,
+					"Failed to load image.",
+					Toast.LENGTH_LONG
+				)
 				toast.show()
 			}
 
 		}
 		else // Invalid intent.
 		{
-			Log.w(tag, "No IMAGE_URI was sent with Intent. Falling back to MainActivity")
+			Log.w(tag, "No IMAGE_URI was sent in the intent. Falling back to MainActivity.")
 			startActivity(Intent(this, MainActivity::class.java))
 		}
 
