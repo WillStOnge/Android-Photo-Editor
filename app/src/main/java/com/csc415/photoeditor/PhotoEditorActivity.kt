@@ -37,7 +37,13 @@ class PhotoEditorActivity : AppCompatActivity()
 			Log.d(tag, imageUri)
 
 			try {
-				bitmap = BitmapFactory.decodeStream(FileInputStream(File(imageUri)))
+				// If the Uri is from the content scheme, open with the content resolver, otherwise, just use a FileInputStream.
+				val stream: InputStream = if (imageUri.contains("content:/")) contentResolver.openInputStream(
+					Uri.parse(imageUri)
+				)!!
+				else FileInputStream(File(imageUri))
+
+				bitmap = BitmapFactory.decodeStream(stream)
 				val exif = ExifInterface(imageUri)
 				val orientation: Int = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1)
 				val matrix = Matrix()
