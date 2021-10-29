@@ -1,5 +1,5 @@
 # Android-Photo-Editor
-Basic photo editing app written in Kotlin for Android 5.0.
+Basic photo editing app written in Kotlin for Android 5.0. The app will take a picture or open an image from disk. It can auto-balance, auto-expose, and invert the image as well as share and save it back to disk.
 
 Team consists of:
 - [Will St. Onge](https://github.com/WillStOnge)
