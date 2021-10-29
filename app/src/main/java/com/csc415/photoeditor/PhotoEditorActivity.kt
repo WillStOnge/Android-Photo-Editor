@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.graphics.drawable.BitmapDrawable
+import android.net.Uri
 import androidx.exifinterface.media.ExifInterface
 import android.os.Bundle
 import android.util.Log
@@ -17,6 +18,7 @@ import com.csc415.photoeditor.transform.Exposure
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
+import java.io.InputStream
 
 class PhotoEditorActivity : AppCompatActivity()
 {
@@ -38,23 +40,15 @@ class PhotoEditorActivity : AppCompatActivity()
 
 			try {
 				// If the Uri is from the content scheme, open with the content resolver, otherwise, just use a FileInputStream.
-				val stream: InputStream = if (imageUri.contains("content:/")) contentResolver.openInputStream(
+				val stream: InputStream = if (imageUri.contains("content:")) contentResolver.openInputStream(
 					Uri.parse(imageUri)
 				)!!
 				else FileInputStream(File(imageUri))
 
 				bitmap = BitmapFactory.decodeStream(stream)
-				val exif = ExifInterface(imageUri)
-				val orientation: Int = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1)
 				val matrix = Matrix()
 
-				// Make sure that the image rotation is correct. Sometimes it likes to be off +/- 90 degrees.
-				when (orientation)
-				{
-					6 -> matrix.postRotate(90F)
-					3 -> matrix.postRotate(180F)
-					8 -> matrix.postRotate(270F)
-				}
+				matrix.postRotate(90F)
 
 				// Recreate the bitmap using the rotation matrix.
 				bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
