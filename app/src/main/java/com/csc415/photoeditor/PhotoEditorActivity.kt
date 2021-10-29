@@ -21,7 +21,7 @@ import java.io.FileNotFoundException
 class PhotoEditorActivity : AppCompatActivity()
 {
 	private val tag = this::class.java.simpleName
-	private lateinit var imageUri : String
+	private lateinit var imageUri: String
 	private lateinit var bitmap: Bitmap
 
 	override fun onCreate(savedInstanceState: Bundle?)
