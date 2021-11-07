@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
-import androidx.exifinterface.media.ExifInterface
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -15,10 +14,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.csc415.photoeditor.transform.ColorBalance
 import com.csc415.photoeditor.transform.Exposure
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileNotFoundException
-import java.io.InputStream
+import com.csc415.photoeditor.util.saveToInternalStorage
+import java.io.*
+
 
 class PhotoEditorActivity : AppCompatActivity()
 {
@@ -46,6 +44,7 @@ class PhotoEditorActivity : AppCompatActivity()
 				else FileInputStream(File(imageUri))
 
 				bitmap = BitmapFactory.decodeStream(stream)
+				Log.d(tag, bitmap.toString())
 				val matrix = Matrix()
 
 				matrix.postRotate(90F)
@@ -56,8 +55,7 @@ class PhotoEditorActivity : AppCompatActivity()
 			} catch (e: FileNotFoundException) {
 				Log.e(tag, "Image file not found. Falling back to MainActivity", e)
 				startActivity(Intent(this, MainActivity::class.java))
-				val toast = Toast.makeText(applicationContext, "File Not Found", Toast.LENGTH_LONG)
-				toast.show()
+				Toast.makeText(applicationContext, "File Not Found", Toast.LENGTH_LONG).show()
 			}
 
 		}
@@ -71,6 +69,15 @@ class PhotoEditorActivity : AppCompatActivity()
 		setupShareButton()
 		setupExposureButton()
 		setupColorBalance()
+		setupSaveButton()
+	}
+
+	private fun setupSaveButton() {
+		val saveButton = findViewById<Button>(R.id.save)
+
+		saveButton.setOnClickListener {
+			saveToInternalStorage(applicationContext, bitmap, "image", "PNG")
+		}
 	}
 
 	/**
