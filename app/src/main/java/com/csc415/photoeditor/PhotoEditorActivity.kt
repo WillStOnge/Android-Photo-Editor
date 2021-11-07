@@ -43,12 +43,13 @@ class PhotoEditorActivity : AppCompatActivity()
 				)!!
 				else FileInputStream(File(imageUri))
 
+				// Rotate the bitmap 90 degrees.
 				val matrix = Matrix()
 				matrix.postRotate(90F)
 
+				// Scale and compress the bitmap.
 				val display = windowManager.defaultDisplay
-
-				bitmap = compressImage(BitmapFactory.decodeStream(stream), display.width, display.height)
+				bitmap = compressImage(stream, display.width, display.height)
 
 				// Recreate the bitmap using the rotation matrix.
 				bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)

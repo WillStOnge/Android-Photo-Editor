@@ -3,8 +3,10 @@ package com.csc415.photoeditor.util
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.util.Pair
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.lang.IllegalArgumentException
 
 /**
@@ -50,7 +52,23 @@ fun findWhitestPixel(input: Bitmap): Pair<Int, Int>
 /**
  * Scales and compresses a Bitmap while preserving the aspect ratio of the image.
  *
- * @param bitmap The input image which will be compressed.
+ * @param stream An input stream containing an image which will be compressed.
+ * @param maxHeight Max height of the resulting image.
+ * @param maxWidth Max width of the resulting image.
+ *
+ * @return The compressed Bitmap.
+ *
+ * @author Will St. Onge
+ */
+fun compressImage(stream: InputStream, maxWidth: Int, maxHeight: Int): Bitmap
+{
+	return compressImage(BitmapFactory.decodeStream(stream), maxWidth, maxHeight)
+}
+
+/**
+ * Scales and compresses a Bitmap while preserving the aspect ratio of the image.
+ *
+ * @param bitmap The image which will be compressed.
  * @param maxHeight Max height of the resulting image.
  * @param maxWidth Max width of the resulting image.
  *
@@ -76,8 +94,8 @@ fun compressImage(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap
 
 	image = Bitmap.createScaledBitmap(image, finalWidth, finalHeight, true)
 
-	val stream = ByteArrayOutputStream()
-	image.compress(Bitmap.CompressFormat.PNG, 100, stream)
+	val outputStream = ByteArrayOutputStream()
+	image.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
 
-	return BitmapFactory.decodeStream(ByteArrayInputStream(stream.toByteArray()))
+	return BitmapFactory.decodeStream(ByteArrayInputStream(outputStream.toByteArray()))
 }
