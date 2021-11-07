@@ -1,10 +1,10 @@
 package com.csc415.photoeditor
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -17,6 +17,7 @@ import com.csc415.photoeditor.transform.Exposure
 import com.csc415.photoeditor.util.saveToInternalStorage
 import java.io.*
 
+const val REQUEST_CODE = 100
 
 class PhotoEditorActivity : AppCompatActivity()
 {
@@ -72,11 +73,30 @@ class PhotoEditorActivity : AppCompatActivity()
 		setupSaveButton()
 	}
 
+	override fun onRequestPermissionsResult(
+		requestCode: Int,
+		permissions: Array<String?>,
+		grantResults: IntArray
+	) {
+		if (requestCode == REQUEST_CODE) {
+			if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+				saveToInternalStorage(bitmap, this)
+			} else {
+				Toast.makeText(
+					this,
+					"Please provide the required permissions",
+					Toast.LENGTH_SHORT
+				).show()
+			}
+		}
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+	}
+
 	private fun setupSaveButton() {
 		val saveButton = findViewById<Button>(R.id.save)
 
 		saveButton.setOnClickListener {
-			saveToInternalStorage(applicationContext, bitmap, "image", "PNG")
+			saveToInternalStorage(bitmap, this)
 		}
 	}
 
@@ -128,7 +148,6 @@ class PhotoEditorActivity : AppCompatActivity()
 		val exposeButton = findViewById<Button>(R.id.expose)
 
 		exposeButton.setOnClickListener {
-			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 			bitmap = bitmap.copy(bitmap.config, true)
 			bitmap = Exposure.doTransformation(bitmap)
 			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
@@ -146,7 +165,6 @@ class PhotoEditorActivity : AppCompatActivity()
 		val colorBalanceButton = findViewById<Button>(R.id.balance)
 
 		colorBalanceButton.setOnClickListener {
-			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 			bitmap = bitmap.copy(bitmap.config, true)
 			bitmap = ColorBalance.doTransformation(bitmap)
 			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
