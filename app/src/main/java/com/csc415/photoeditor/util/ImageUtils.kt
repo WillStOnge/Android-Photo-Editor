@@ -1,10 +1,17 @@
 package com.csc415.photoeditor.util
 
+import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.os.Environment
 import android.widget.Toast
-import java.lang.Exception
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.csc415.photoeditor.REQUEST_CODE
+import java.io.File
+import java.io.FileOutputStream
 
 /**
  * Finds the whitest pixel so we can automatically expose the image.
@@ -46,15 +53,33 @@ fun findWhitestPixel(input: Bitmap): Pair<Int, Int>
 	return pixelCoordinates
 }
 
-fun saveToInternalStorage(context: Context, b: Bitmap, name: String, extension: String) {
-	val fos = context.openFileOutput("$name.$extension", Context.MODE_PRIVATE)
-
-	try {
-		b.compress(Bitmap.CompressFormat.JPEG, 90, fos)
-		Toast.makeText(context, "File Saved!", Toast.LENGTH_LONG).show()
-	} catch (e: Exception) {
-		e.printStackTrace()
-	} finally {
-		fos.close()
+fun saveToInternalStorage(bitmap: Bitmap, context: Context) {
+	if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+		saveImage(bitmap, context)
+	} else {
+		askPermission(context)
 	}
+}
+
+private fun saveImage(bitmap: Bitmap, context: Context) {
+	val dir = File(Environment.getExternalStorageDirectory(), "SaveImage")
+
+	if (!dir.exists()) {
+		dir.mkdir()
+	}
+	val ts = System.currentTimeMillis()
+	val file = File(dir, "$ts.jpg")
+	val stream = FileOutputStream(file).use { stream ->
+		bitmap.compress(Bitmap.CompressFormat.PNG, 95, stream)
+	}
+
+	Toast.makeText(context, "Saved file!", Toast.LENGTH_SHORT).show()
+}
+
+private fun askPermission(context: Context) {
+	ActivityCompat.requestPermissions(
+		context as Activity,
+		arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
+		REQUEST_CODE
+	)
 }
