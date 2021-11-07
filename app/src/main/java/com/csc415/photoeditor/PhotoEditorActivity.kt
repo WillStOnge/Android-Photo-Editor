@@ -92,9 +92,17 @@ class PhotoEditorActivity : AppCompatActivity()
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 	}
 
-	private fun setupSaveButton() {
+	/**
+	 * Sets up the 'Save' button.
+	 *
+	 * @author Anthony Bosch
+	 */
+	private fun setupSaveButton()
+	{
+		// Setup view elements.
 		val saveButton = findViewById<Button>(R.id.save)
 
+		// Set onClick behavior.
 		saveButton.setOnClickListener {
 			saveToInternalStorage(bitmap, this)
 		}

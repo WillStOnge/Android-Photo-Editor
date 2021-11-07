@@ -53,6 +53,13 @@ fun findWhitestPixel(input: Bitmap): Pair<Int, Int>
 	return pixelCoordinates
 }
 
+/**
+ * Saves a file by first checking the permissions to the external storage. If the permission to
+ * external storage is set, the image will be saved, otherwise a dialog appears asking permission to
+ * access the external storage.
+ *
+ * @author Anthony Bosch
+ */
 fun saveToInternalStorage(bitmap: Bitmap, context: Context) {
 	if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
 		saveImage(bitmap, context)
@@ -61,6 +68,14 @@ fun saveToInternalStorage(bitmap: Bitmap, context: Context) {
 	}
 }
 
+
+/**
+ * Creates a storage directory in the device's file manager where the bitmap will be saved. Uses a
+ * FileOutputStream to compress and save the file under a name that includes the current timestamp
+ * ensuring each image will be unique.
+ *
+ * @author Anthony Bosch
+ */
 private fun saveImage(bitmap: Bitmap, context: Context) {
 	val dir = File(Environment.getExternalStorageDirectory(), "SaveImage")
 
@@ -76,6 +91,12 @@ private fun saveImage(bitmap: Bitmap, context: Context) {
 	Toast.makeText(context, "Saved file!", Toast.LENGTH_SHORT).show()
 }
 
+/**
+ * Requests permission for writing to external storage along with the context and REQUEST_CODE which
+ * is equal to 100.
+ *
+ * @author Anthony Bosch
+ */
 private fun askPermission(context: Context) {
 	ActivityCompat.requestPermissions(
 		context as Activity,
