@@ -1,7 +1,10 @@
 package com.csc415.photoeditor.util
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.widget.Toast
+import java.lang.Exception
 
 /**
  * Finds the whitest pixel so we can automatically expose the image.
@@ -41,4 +44,17 @@ fun findWhitestPixel(input: Bitmap): Pair<Int, Int>
 	}
 
 	return pixelCoordinates
+}
+
+fun saveToInternalStorage(context: Context, b: Bitmap, name: String, extension: String) {
+	val fos = context.openFileOutput("$name.$extension", Context.MODE_PRIVATE)
+
+	try {
+		b.compress(Bitmap.CompressFormat.JPEG, 90, fos)
+		Toast.makeText(context, "File Saved!", Toast.LENGTH_LONG).show()
+	} catch (e: Exception) {
+		e.printStackTrace()
+	} finally {
+		fos.close()
+	}
 }
