@@ -1,10 +1,10 @@
 package com.csc415.photoeditor
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -15,8 +15,10 @@ import androidx.appcompat.app.AppCompatActivity
 import com.csc415.photoeditor.transform.ColorBalance
 import com.csc415.photoeditor.transform.Exposure
 import com.csc415.photoeditor.util.saveToInternalStorage
+import com.csc415.photoeditor.util.compressImage
 import java.io.*
 
+const val REQUEST_CODE = 100
 
 class PhotoEditorActivity : AppCompatActivity()
 {
@@ -24,6 +26,7 @@ class PhotoEditorActivity : AppCompatActivity()
 	private lateinit var imageUri: String
 	private lateinit var bitmap: Bitmap
 
+	@Suppress("DEPRECATION")
 	override fun onCreate(savedInstanceState: Bundle?)
 	{
 		super.onCreate(savedInstanceState)
@@ -36,23 +39,30 @@ class PhotoEditorActivity : AppCompatActivity()
 			imageUri = intent.getStringExtra(PHOTO_URI)!!
 			Log.d(tag, imageUri)
 
-			try {
+			try
+			{
 				// If the Uri is from the content scheme, open with the content resolver, otherwise, just use a FileInputStream.
 				val stream: InputStream = if (imageUri.contains("content:")) contentResolver.openInputStream(
 					Uri.parse(imageUri)
 				)!!
 				else FileInputStream(File(imageUri))
 
-				bitmap = BitmapFactory.decodeStream(stream)
-				Log.d(tag, bitmap.toString())
+				// Rotate the bitmap 90 degrees.
 				val matrix = Matrix()
-
 				matrix.postRotate(90F)
 
+				// Scale and compress the bitmap.
+				val display = windowManager.defaultDisplay
+				bitmap = compressImage(stream, display.width, display.height)
+
 				// Recreate the bitmap using the rotation matrix.
-				bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+				bitmap = Bitmap.createBitmap(
+					bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
+				)
 				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
-			} catch (e: FileNotFoundException) {
+			}
+			catch (e: FileNotFoundException)
+			{
 				Log.e(tag, "Image file not found. Falling back to MainActivity", e)
 				startActivity(Intent(this, MainActivity::class.java))
 				Toast.makeText(applicationContext, "File Not Found", Toast.LENGTH_LONG).show()
@@ -72,11 +82,32 @@ class PhotoEditorActivity : AppCompatActivity()
 		setupSaveButton()
 	}
 
-	private fun setupSaveButton() {
+	override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray)
+	{
+		if (requestCode == REQUEST_CODE)
+		{
+			if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) saveToInternalStorage(
+				bitmap, this
+			)
+			else Toast.makeText(this, "Please provide the required permissions", Toast.LENGTH_SHORT)
+				.show()
+		}
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+	}
+
+	/**
+	 * Sets up the 'Save' button.
+	 *
+	 * @author Anthony Bosch
+	 */
+	private fun setupSaveButton()
+	{
+		// Setup view elements.
 		val saveButton = findViewById<Button>(R.id.save)
 
+		// Set onClick behavior.
 		saveButton.setOnClickListener {
-			saveToInternalStorage(applicationContext, bitmap, "image", "PNG")
+			saveToInternalStorage(bitmap, this)
 		}
 	}
 
@@ -128,7 +159,6 @@ class PhotoEditorActivity : AppCompatActivity()
 		val exposeButton = findViewById<Button>(R.id.expose)
 
 		exposeButton.setOnClickListener {
-			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 			bitmap = bitmap.copy(bitmap.config, true)
 			bitmap = Exposure.doTransformation(bitmap)
 			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
@@ -146,7 +176,6 @@ class PhotoEditorActivity : AppCompatActivity()
 		val colorBalanceButton = findViewById<Button>(R.id.balance)
 
 		colorBalanceButton.setOnClickListener {
-			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 			bitmap = bitmap.copy(bitmap.config, true)
 			bitmap = ColorBalance.doTransformation(bitmap)
 			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
