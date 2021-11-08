@@ -3,7 +3,6 @@ package com.csc415.photoeditor
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.Bundle
@@ -14,9 +13,15 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.csc415.photoeditor.transform.ColorBalance
 import com.csc415.photoeditor.transform.Exposure
-import com.csc415.photoeditor.util.saveToInternalStorage
 import com.csc415.photoeditor.util.compressImage
+import com.csc415.photoeditor.util.saveToInternalStorage
+import android.os.Environment
 import java.io.*
+import android.graphics.drawable.BitmapDrawable
+
+
+
+
 
 const val REQUEST_CODE = 100
 
@@ -139,12 +144,23 @@ class PhotoEditorActivity : AppCompatActivity()
 
 		// Set the onClick behavior.
 		shareButton.setOnClickListener {
+			// Save file to disk temporarily.
+			val file = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "temp_${System.currentTimeMillis()}.png")
+			val stream = FileOutputStream(file)
+			val bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
+			bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+			stream.close()
+
+			// Share image to the system.
 			val intent = Intent(Intent.ACTION_SEND)
 			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 			intent.type = "image/*"
-			intent.putExtra(Intent.EXTRA_STREAM, imageUri)
+			intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file))
 
 			startActivity(Intent.createChooser(intent, "Share to"))
+
+			// Will delete the file when the app terminates.
+			file.deleteOnExit()
 		}
 	}
 

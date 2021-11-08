@@ -6,7 +6,9 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.net.Uri
 import android.os.Environment
+import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -71,53 +73,14 @@ fun findWhitestPixel(input: Bitmap): Pair<Int, Int>
  */
 fun saveToInternalStorage(bitmap: Bitmap, context: Context)
 {
-	if (ContextCompat.checkSelfPermission(
-			context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-		) == PackageManager.PERMISSION_GRANTED
-	) saveImage(bitmap, context)
-	else askPermission(context)
-}
-
-/**
- * Creates a storage directory in the device's file manager where the bitmap will be saved. Uses a
- * FileOutputStream to compress and save the file under a name that includes the current timestamp
- * ensuring each image will be unique.
- *
- * @param bitmap The bitmap object to save.
- * @param context The context in which the image is saved (typically the calling activity).
- *
- * @author Anthony Bosch
- */
-private fun saveImage(bitmap: Bitmap, context: Context)
-{
-	val dir = File(Environment.getExternalStorageDirectory(), "SaveImage")
-
-	if (!dir.exists()) dir.mkdir()
-
-	val file = File(dir, "${System.currentTimeMillis()}.jpg")
+	val file = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "${System.currentTimeMillis()}.png")
 	FileOutputStream(file).use { stream ->
-		bitmap.compress(Bitmap.CompressFormat.PNG, 95, stream)
+		bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
 	}
 
-	Toast.makeText(context, "Saved file!", Toast.LENGTH_SHORT).show()
-}
+	Log.d("SaveImage", Uri.fromFile(file).toString())
 
-/**
- * Requests permission for writing to external storage along with the context and REQUEST_CODE which
- * is equal to 100.
- *
- * @param context The context in which the permission is being requested (typically the calling
- * activity).
- *
- * @author Anthony Bosch
- */
-private fun askPermission(context: Context)
-{
-	ActivityCompat.requestPermissions(
-		context as Activity,
-		arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
-		REQUEST_CODE
-	)
+	Toast.makeText(context, "Saved file!", Toast.LENGTH_SHORT).show()
 }
   
 /**
@@ -149,8 +112,7 @@ fun compressImage(stream: InputStream, maxWidth: Int, maxHeight: Int): Bitmap
  */
 fun compressImage(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap
 {
-	if (maxHeight < 1 || maxWidth < 1)
-		throw IllegalArgumentException("Height and width must be at least 1.")
+	if (maxHeight < 1 || maxWidth < 1) throw IllegalArgumentException("Height and width must be at least 1.")
 
 	var image = bitmap
 	val ratioBitmap = image.width.toFloat() / image.height.toFloat()
@@ -158,10 +120,8 @@ fun compressImage(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap
 	var finalWidth = maxWidth
 	var finalHeight = maxHeight
 
-	if (ratioMax > ratioBitmap)
-		finalWidth = (maxHeight.toFloat() * ratioBitmap).toInt()
-	else
-		finalHeight = (maxWidth.toFloat() / ratioBitmap).toInt()
+	if (ratioMax > ratioBitmap) finalWidth = (maxHeight.toFloat() * ratioBitmap).toInt()
+	else finalHeight = (maxWidth.toFloat() / ratioBitmap).toInt()
 
 	image = Bitmap.createScaledBitmap(image, finalWidth, finalHeight, true)
 
