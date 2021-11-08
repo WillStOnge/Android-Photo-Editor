@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
-    android:id="@+id/main_activity_layout">
+    tools:context=".MainActivity">
 
     <Button
         android:id="@+id/pick_image"

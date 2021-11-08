@@ -5,4 +5,7 @@
     <string name="exit">Exit</string>
     <string name="photo_content_desc">Image being edited.</string>
     <string name="share">Share</string>
+    <string name="expose">expose</string>
+    <string name="balance">balance</string>
+    <string name="save">Save</string>
 </resources>

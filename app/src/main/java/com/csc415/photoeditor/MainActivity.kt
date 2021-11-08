@@ -3,23 +3,42 @@ package com.csc415.photoeditor
 import android.content.Intent
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts.GetContent
+import androidx.activity.result.contract.ActivityResultContracts.TakePicture
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.IOException
-import java.util.Locale
-import java.util.Date
+import java.util.*
+
+const val PHOTO_URI = "com.csc415.photoeditor.photo_uri"
 
 class MainActivity : AppCompatActivity()
 {
-	private val TAG = MainActivity::class.java.simpleName
+	private val tag = this::class.java.simpleName
 	private lateinit var currentPhotoPath: String
+
+	private val getContent = registerForActivityResult(GetContent())
+	{
+		Log.d(tag, it.toString())
+		startActivity(Intent(this, PhotoEditorActivity::class.java).apply {
+			putExtra(PHOTO_URI, it.toString())
+		})
+	}
+
+	private val takePicture = registerForActivityResult(TakePicture())
+	{
+		Log.d(tag, currentPhotoPath)
+		startActivity(Intent(this, PhotoEditorActivity::class.java).apply {
+			putExtra(PHOTO_URI, currentPhotoPath)
+		})
+	}
 
 	/**
 	 * Handles the activity creation by calling setup methods.
@@ -36,55 +55,15 @@ class MainActivity : AppCompatActivity()
 	}
 
 	/**
-	 * Handles the activity result when the image is returned.
-	 *
-	 * @author Will St. Onge
-	 */
-	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?)
-	{
-		when (requestCode)
-		{
-			RequestType.PICK_IMAGE_REQUEST.type ->
-			{
-				Log.d(TAG, data?.data.toString())
-
-				val intent = Intent(this, PhotoEditorActivity::class.java).apply {
-					putExtra(IntentExtraMessage.PHOTO_URI.extraName, data?.data.toString())
-				}
-				startActivity(intent)
-			}
-
-			RequestType.TAKE_PICTURE_REQUEST.type ->
-			{
-				Log.d(TAG, currentPhotoPath)
-
-				val intent = Intent(this, PhotoEditorActivity::class.java).apply {
-					putExtra(IntentExtraMessage.PHOTO_URI.extraName, currentPhotoPath)
-				}
-				startActivity(intent)
-			}
-
-			else -> super.onActivityResult(requestCode, resultCode, data)
-		}
-	}
-
-	/**
 	 * Sets up the 'Pick Image' button.
 	 *
 	 * @author Will St. Onge
 	 */
 	private fun setupPickImageButton()
 	{
-		// Setup view elements.
-		val pickImageButton = findViewById<Button>(R.id.pick_image)
-
 		// Set the onClick behavior.
-		pickImageButton.setOnClickListener {
-			val intent = Intent(Intent.ACTION_GET_CONTENT)
-			intent.type = "image/*"
-			startActivityForResult(
-				Intent.createChooser(intent, "Select Picture"), RequestType.PICK_IMAGE_REQUEST.type
-			)
+		findViewById<Button>(R.id.pick_image).setOnClickListener {
+			getContent.launch("image/*")
 		}
 	}
 
@@ -95,11 +74,8 @@ class MainActivity : AppCompatActivity()
 	 */
 	private fun setupTakePictureButton()
 	{
-		// Setup view elements.
-		val takePictureButton = findViewById<Button>(R.id.take_picture)
-
 		// Set the onClick behavior.
-		takePictureButton.setOnClickListener {
+		findViewById<Button>(R.id.take_picture).setOnClickListener {
 			Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
 				// Ensure that there's a camera activity to handle the intent
 				takePictureIntent.resolveActivity(packageManager)?.also {
@@ -113,7 +89,7 @@ class MainActivity : AppCompatActivity()
 						Toast.makeText(
 							applicationContext, "Unable to create file.", Toast.LENGTH_LONG
 						).show()
-						Log.w(TAG, e)
+						Log.w(tag, e)
 						null // Sets photoFile to null
 					}
 
@@ -122,10 +98,8 @@ class MainActivity : AppCompatActivity()
 						val photoURI: Uri = FileProvider.getUriForFile(
 							this, BuildConfig.APPLICATION_ID + ".fileprovider", it
 						)
-						takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-						startActivityForResult(
-							takePictureIntent, RequestType.TAKE_PICTURE_REQUEST.type
-						)
+
+						takePicture.launch(photoURI)
 					}
 				}
 			}
