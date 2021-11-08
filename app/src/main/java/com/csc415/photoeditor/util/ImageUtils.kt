@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Environment
 import android.widget.Toast
@@ -12,11 +13,16 @@ import androidx.core.content.ContextCompat
 import com.csc415.photoeditor.REQUEST_CODE
 import java.io.File
 import java.io.FileOutputStream
+import android.util.Pair
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.lang.IllegalArgumentException
 
 /**
  * Finds the whitest pixel so we can automatically expose the image.
  *
- * @param input The input image which will be balanced.
+ * @param input The input image to find the whitest pixel in.
  *
  * @return A pair of the x and y coordinates of the optimal pixel, [x, y].
  *
@@ -112,4 +118,55 @@ private fun askPermission(context: Context)
 		arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
 		REQUEST_CODE
 	)
+}
+  
+/**
+ * Scales and compresses a Bitmap while preserving the aspect ratio of the image.
+ *
+ * @param stream An input stream containing an image which will be compressed.
+ * @param maxHeight Max height of the resulting image.
+ * @param maxWidth Max width of the resulting image.
+ *
+ * @return The compressed Bitmap.
+ *
+ * @author Will St. Onge
+ */
+fun compressImage(stream: InputStream, maxWidth: Int, maxHeight: Int): Bitmap
+{
+	return compressImage(BitmapFactory.decodeStream(stream), maxWidth, maxHeight)
+}
+
+/**
+ * Scales and compresses a Bitmap while preserving the aspect ratio of the image.
+ *
+ * @param bitmap The image which will be compressed.
+ * @param maxHeight Max height of the resulting image.
+ * @param maxWidth Max width of the resulting image.
+ *
+ * @return The compressed Bitmap.
+ *
+ * @author Will St. Onge
+ */
+fun compressImage(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap
+{
+	if (maxHeight < 1 || maxWidth < 1)
+		throw IllegalArgumentException("Height and width must be at least 1.")
+
+	var image = bitmap
+	val ratioBitmap = image.width.toFloat() / image.height.toFloat()
+	val ratioMax = maxWidth.toFloat() / maxHeight.toFloat()
+	var finalWidth = maxWidth
+	var finalHeight = maxHeight
+
+	if (ratioMax > ratioBitmap)
+		finalWidth = (maxHeight.toFloat() * ratioBitmap).toInt()
+	else
+		finalHeight = (maxWidth.toFloat() / ratioBitmap).toInt()
+
+	image = Bitmap.createScaledBitmap(image, finalWidth, finalHeight, true)
+
+	val outputStream = ByteArrayOutputStream()
+	image.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+
+	return BitmapFactory.decodeStream(ByteArrayInputStream(outputStream.toByteArray()))
 }

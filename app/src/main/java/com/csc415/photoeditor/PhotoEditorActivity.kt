@@ -15,10 +15,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.csc415.photoeditor.transform.ColorBalance
 import com.csc415.photoeditor.transform.Exposure
 import com.csc415.photoeditor.util.saveToInternalStorage
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileNotFoundException
-import java.io.InputStream
+import com.csc415.photoeditor.util.compressImage
+import java.io.*
 
 const val REQUEST_CODE = 100
 
@@ -28,6 +26,7 @@ class PhotoEditorActivity : AppCompatActivity()
 	private lateinit var imageUri: String
 	private lateinit var bitmap: Bitmap
 
+	@Suppress("DEPRECATION")
 	override fun onCreate(savedInstanceState: Bundle?)
 	{
 		super.onCreate(savedInstanceState)
@@ -48,11 +47,13 @@ class PhotoEditorActivity : AppCompatActivity()
 				)!!
 				else FileInputStream(File(imageUri))
 
-				bitmap = BitmapFactory.decodeStream(stream)
-				Log.d(tag, bitmap.toString())
+				// Rotate the bitmap 90 degrees.
 				val matrix = Matrix()
-
 				matrix.postRotate(90F)
+
+				// Scale and compress the bitmap.
+				val display = windowManager.defaultDisplay
+				bitmap = compressImage(stream, display.width, display.height)
 
 				// Recreate the bitmap using the rotation matrix.
 				bitmap = Bitmap.createBitmap(
