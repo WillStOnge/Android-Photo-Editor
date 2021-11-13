@@ -1,25 +1,13 @@
 package com.csc415.photoeditor.util
 
-import android.app.Activity
 import android.content.Context
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.net.Uri
 import android.os.Environment
-import android.util.Log
-import android.widget.Toast
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import com.csc415.photoeditor.REQUEST_CODE
-import java.io.File
-import java.io.FileOutputStream
 import android.util.Pair
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.lang.IllegalArgumentException
+import android.widget.Toast
+import java.io.*
 
 /**
  * Finds the whitest pixel so we can automatically expose the image.
@@ -77,8 +65,6 @@ fun saveToInternalStorage(bitmap: Bitmap, context: Context)
 	FileOutputStream(file).use { stream ->
 		bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
 	}
-
-	Log.d("SaveImage", Uri.fromFile(file).toString())
 
 	Toast.makeText(context, "Saved file!", Toast.LENGTH_SHORT).show()
 }

@@ -4,26 +4,21 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import com.csc415.photoeditor.transform.ColorBalance
 import com.csc415.photoeditor.transform.Exposure
 import com.csc415.photoeditor.util.compressImage
 import com.csc415.photoeditor.util.saveToInternalStorage
-import android.os.Environment
 import java.io.*
-import android.graphics.drawable.BitmapDrawable
-
-
-
-
-
-const val REQUEST_CODE = 100
 
 class PhotoEditorActivity : AppCompatActivity()
 {
@@ -87,19 +82,6 @@ class PhotoEditorActivity : AppCompatActivity()
 		setupSaveButton()
 	}
 
-	override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray)
-	{
-		if (requestCode == REQUEST_CODE)
-		{
-			if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) saveToInternalStorage(
-				bitmap, this
-			)
-			else Toast.makeText(this, "Please provide the required permissions", Toast.LENGTH_SHORT)
-				.show()
-		}
-		super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-	}
-
 	/**
 	 * Sets up the 'Save' button.
 	 *
@@ -144,23 +126,43 @@ class PhotoEditorActivity : AppCompatActivity()
 
 		// Set the onClick behavior.
 		shareButton.setOnClickListener {
-			// Save file to disk temporarily.
-			val file = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "temp_${System.currentTimeMillis()}.png")
+			// Save file to disk in a temp file.
+			val file = File(
+				getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+				"temp_${System.currentTimeMillis()}.png"
+			)
 			val stream = FileOutputStream(file)
 			val bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 			bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
 			stream.close()
 
+			// Gets the file URI from the file provider.
+			val uri = FileProvider.getUriForFile(
+				applicationContext, "${applicationContext.packageName}.fileprovider", file
+			)
+
 			// Share image to the system.
-			val intent = Intent(Intent.ACTION_SEND)
-			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-			intent.type = "image/*"
-			intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file))
+			val intent = Intent().apply {
+				type = "image/*"
+				action = Intent.ACTION_SEND
+				addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+				putExtra(Intent.EXTRA_STREAM, uri)
+			}
 
-			startActivity(Intent.createChooser(intent, "Share to"))
+			// Create the chooser intent.
+			val chooser = Intent.createChooser(intent, "Share to")
 
-			// Will delete the file when the app terminates.
-			file.deleteOnExit()
+			// Grant permission to the image so the system can access it.
+			packageManager.queryIntentActivities(chooser, PackageManager.MATCH_DEFAULT_ONLY)
+				.forEach {
+					grantUriPermission(
+						it.activityInfo.packageName,
+						uri,
+						Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION
+					)
+				}
+
+			startActivity(chooser)
 		}
 	}
 
