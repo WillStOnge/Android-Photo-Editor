@@ -8,4 +8,5 @@
     <string name="expose">expose</string>
     <string name="balance">balance</string>
     <string name="save">Save</string>
+    <string name="send_to">Send to</string>
 </resources>
