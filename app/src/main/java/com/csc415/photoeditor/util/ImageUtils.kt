@@ -1,10 +1,14 @@
 package com.csc415.photoeditor.util
 
+import android.content.ContentResolver
+import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.net.Uri
 import android.os.Environment
+import android.provider.MediaStore
 import android.util.Pair
 import android.widget.Toast
 import java.io.*
@@ -115,4 +119,67 @@ fun compressImage(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap
 	image.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
 
 	return BitmapFactory.decodeStream(ByteArrayInputStream(outputStream.toByteArray()))
+}
+
+/**
+ * Saves a file to the gallery by setting values specific to the image and using the ContentResolver
+ * to create a URI where the image will be stored.
+ *
+ * @param cr The ContentResolver that is being passed from the PhotoEditorActivity
+ * @param source The bitmap that is passed from the PhotoEditorActivity
+ * @param title Title of the new image to be stored in the gallery
+ * @param description Description of the new image to be stored in the gallery
+ *
+ * @author Anthony Bosch
+ */
+fun insertImage(cr: ContentResolver, source: Bitmap?, title: String?, description: String?): String? {
+	val values = setContentValues(title, description)
+
+	var url: Uri? = null
+	var stringUrl: String? = null /* value to be returned */
+	try {
+		url = cr.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+		if (source != null) {
+			val imageOut = cr.openOutputStream(url!!)
+			try {
+				source.compress(Bitmap.CompressFormat.PNG, 100, imageOut)
+			} finally {
+				imageOut!!.close()
+			}
+		} else {
+			cr.delete(url!!, null, null)
+			url = null
+		}
+	} catch (e: Exception) {
+		if (url != null) {
+			cr.delete(url, null, null)
+			url = null
+		}
+	}
+	if (url != null) {
+		stringUrl = url.toString()
+	}
+	return stringUrl
+}
+
+
+/**
+ * Sets the values for a specific bitmap
+ *
+ * @param title
+ * @param description
+ *
+ * @author Anthony Bosch
+ */
+private fun setContentValues(title: String?, description: String?): ContentValues {
+	val values = ContentValues()
+	values.put(MediaStore.Images.Media.TITLE, title)
+	values.put(MediaStore.Images.Media.DISPLAY_NAME, title)
+	values.put(MediaStore.Images.Media.DESCRIPTION, description)
+	values.put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+	// Add the date meta data to ensure the image is added at the front of the gallery
+	values.put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis())
+	values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
+
+	return values
 }
