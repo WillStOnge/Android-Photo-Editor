@@ -35,10 +35,10 @@ object Exposure : ITransformation
 	 */
 	private fun doTransformation(input: Bitmap, pixelX: Int, pixelY: Int): Bitmap
 	{
-		val adjust = Color.red(input.getPixel(pixelX, pixelY))
+		val adjust = 255 - Color.red(input.getPixel(pixelX, pixelY))
 
 		// If the pixel is already 100% red, then we don't need to do anything.
-		if (adjust == 255)
+		if (Color.red(input.getPixel(pixelX, pixelY)) == 255)
 			return input
 
 		val width = input.width

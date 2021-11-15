@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Photo Editor</string>
     <string name="pick_image">Pick Image</string>
     <string name="take_picture">Take Picture</string>
     <string name="exit">Exit</string>
     <string name="photo_content_desc">Image being edited.</string>
     <string name="share">Share</string>
+    <string name="expose">expose</string>
     <string name="balance">balance</string>
+    <string name="save">Save</string>
+    <string name="send_to">Send to</string>
 </resources>
