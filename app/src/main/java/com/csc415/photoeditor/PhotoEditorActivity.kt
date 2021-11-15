@@ -17,8 +17,8 @@ import androidx.core.content.FileProvider
 import com.csc415.photoeditor.transform.ColorBalance
 import com.csc415.photoeditor.transform.Exposure
 import com.csc415.photoeditor.util.compressImage
-import com.csc415.photoeditor.util.saveToInternalStorage
 import java.io.*
+import com.csc415.photoeditor.util.insertImage
 
 class PhotoEditorActivity : AppCompatActivity()
 {
@@ -87,14 +87,14 @@ class PhotoEditorActivity : AppCompatActivity()
 	 *
 	 * @author Anthony Bosch
 	 */
-	private fun setupSaveButton()
-	{
+	private fun setupSaveButton() {
 		// Setup view elements.
 		val saveButton = findViewById<Button>(R.id.save)
 
 		// Set onClick behavior.
 		saveButton.setOnClickListener {
-			saveToInternalStorage(bitmap, this)
+			insertImage(contentResolver, bitmap, "image", "description")
+			finish()
 		}
 	}
 
