@@ -2,16 +2,14 @@ package com.csc415.photoeditor.util
 
 import android.content.ContentResolver
 import android.content.ContentValues
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.net.Uri
-import android.os.Environment
 import android.provider.MediaStore
 import android.util.Pair
-import android.widget.Toast
-import java.io.*
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 
 /**
  * Finds the whitest pixel so we can automatically expose the image.
@@ -51,26 +49,6 @@ fun findWhitestPixel(input: Bitmap): Pair<Int, Int>
 	}
 
 	return pixelCoordinates
-}
-
-/**
- * Saves a file by first checking the permissions to the external storage. If the permission to
- * external storage is set, the image will be saved, otherwise a dialog appears asking permission to
- * access the external storage.
- *
- * @param bitmap The bitmap object to save.
- * @param context The context in which the image is saved (typically the calling activity).
- *
- * @author Anthony Bosch
- */
-fun saveToInternalStorage(bitmap: Bitmap, context: Context)
-{
-	val file = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "${System.currentTimeMillis()}.png")
-	FileOutputStream(file).use { stream ->
-		bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-	}
-
-	Toast.makeText(context, "Saved file!", Toast.LENGTH_SHORT).show()
 }
   
 /**
@@ -132,36 +110,22 @@ fun compressImage(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap
  *
  * @author Anthony Bosch
  */
-fun insertImage(cr: ContentResolver, source: Bitmap?, title: String?, description: String?): String? {
-	val values = setContentValues(title, description)
+fun insertImage(cr: ContentResolver, source: Bitmap, title: String, description: String): String?
+{
+	return try
+	{
+		val url = cr.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, setContentValues(title, description))!!
 
-	var url: Uri? = null
-	var stringUrl: String? = null /* value to be returned */
-	try {
-		url = cr.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-		if (source != null) {
-			val imageOut = cr.openOutputStream(url!!)
-			try {
-				source.compress(Bitmap.CompressFormat.PNG, 100, imageOut)
-			} finally {
-				imageOut!!.close()
-			}
-		} else {
-			cr.delete(url!!, null, null)
-			url = null
+		cr.openOutputStream(url).use {
+			source.compress(Bitmap.CompressFormat.PNG, 100, it)
 		}
-	} catch (e: Exception) {
-		if (url != null) {
-			cr.delete(url, null, null)
-			url = null
-		}
+		url.toString()
 	}
-	if (url != null) {
-		stringUrl = url.toString()
+	catch (e: Exception)
+	{
+		null
 	}
-	return stringUrl
 }
-
 
 /**
  * Sets the values for a specific bitmap
@@ -171,15 +135,15 @@ fun insertImage(cr: ContentResolver, source: Bitmap?, title: String?, descriptio
  *
  * @author Anthony Bosch
  */
-private fun setContentValues(title: String?, description: String?): ContentValues {
-	val values = ContentValues()
-	values.put(MediaStore.Images.Media.TITLE, title)
-	values.put(MediaStore.Images.Media.DISPLAY_NAME, title)
-	values.put(MediaStore.Images.Media.DESCRIPTION, description)
-	values.put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-	// Add the date meta data to ensure the image is added at the front of the gallery
-	values.put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis())
-	values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
-
-	return values
+private fun setContentValues(title: String?, description: String?): ContentValues
+{
+	return ContentValues().apply {
+		put(MediaStore.Images.Media.TITLE, title)
+		put(MediaStore.Images.Media.DISPLAY_NAME, title)
+		put(MediaStore.Images.Media.DESCRIPTION, description)
+		put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+		// Add the date meta data to ensure the image is added at the front of the gallery
+		put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis())
+		put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
+	}
 }

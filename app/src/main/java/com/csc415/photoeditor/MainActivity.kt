@@ -24,6 +24,11 @@ class MainActivity : AppCompatActivity()
 	private val tag = this::class.java.simpleName
 	private lateinit var currentPhotoPath: String
 
+	/**
+	 * Callback for pick image button.
+	 *
+	 * @author Will St. Onge
+	 */
 	private val getContent = registerForActivityResult(GetContent())
 	{
 		Log.d(tag, it.toString())
@@ -32,6 +37,11 @@ class MainActivity : AppCompatActivity()
 		})
 	}
 
+	/**
+	 * Callback for take picture button.
+	 *
+	 * @author Will St. Onge
+	 */
 	private val takePicture = registerForActivityResult(TakePicture())
 	{
 		Log.d(tag, currentPhotoPath)
