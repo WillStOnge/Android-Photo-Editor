@@ -14,23 +14,33 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProviders
 import com.csc415.photoeditor.transform.ColorBalance
 import com.csc415.photoeditor.transform.Exposure
 import com.csc415.photoeditor.util.compressImage
-import java.io.*
 import com.csc415.photoeditor.util.insertImage
+import java.io.*
 
 class PhotoEditorActivity : AppCompatActivity()
 {
 	private val tag = this::class.java.simpleName
 	private lateinit var imageUri: String
-	private lateinit var bitmap: Bitmap
+	private lateinit var bitmapModel: BitmapViewModel
 
+	/**
+	 * Method will be called when the activity is created. It will load the bitmap from disk and setup the buttons at the bottom of the page.
+	 *
+	 * @author Will St. Onge
+	 */
 	@Suppress("DEPRECATION")
 	override fun onCreate(savedInstanceState: Bundle?)
 	{
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_photo_editor)
+
+		// Initialize view model for this instance of the activity.
+		bitmapModel = ViewModelProviders.of(this).get(BitmapViewModel::class.java)
 
 		// Get intent extra for the photo uri.
 		if (intent.extras!!.containsKey(PHOTO_URI))
@@ -41,33 +51,42 @@ class PhotoEditorActivity : AppCompatActivity()
 
 			try
 			{
-				// If the Uri is from the content scheme, open with the content resolver, otherwise, just use a FileInputStream.
-				val stream: InputStream = if (imageUri.contains("content:")) contentResolver.openInputStream(
-					Uri.parse(imageUri)
-				)!!
-				else FileInputStream(File(imageUri))
+				if (bitmapModel.bitmap == null)
+				{
+					// If the Uri is from the content scheme, open with the content resolver, otherwise, just use a FileInputStream.
+					val stream: InputStream = if (imageUri.contains("content:")) contentResolver.openInputStream(
+						Uri.parse(imageUri)
+					)!!
+					else FileInputStream(File(imageUri))
 
-				// Rotate the bitmap 90 degrees.
-				val matrix = Matrix()
-				matrix.postRotate(90F)
+					// Rotate the bitmap 90 degrees.
+					val matrix = Matrix()
+					matrix.postRotate(90F)
 
-				// Scale and compress the bitmap.
-				val display = windowManager.defaultDisplay
-				bitmap = compressImage(stream, display.width, display.height)
+					// Scale and compress the bitmap.
+					val display = windowManager.defaultDisplay
+					var bitmap = compressImage(stream, display.width, display.height)
 
-				// Recreate the bitmap using the rotation matrix.
-				bitmap = Bitmap.createBitmap(
-					bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
-				)
-				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+					// Recreate the bitmap using the rotation matrix.
+					bitmap = Bitmap.createBitmap(
+						bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
+					)
+					findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+					bitmapModel.bitmap = bitmap
+				}
+				else findViewById<ImageView>(R.id.photo).setImageBitmap(bitmapModel.bitmap)
 			}
 			catch (e: FileNotFoundException)
 			{
-				Log.e(tag, "Image file not found. Falling back to MainActivity", e)
+				Log.e(
+					tag,
+					"Image file not found or couldn't be opened. Falling back to MainActivity",
+					e
+				)
 				startActivity(Intent(this, MainActivity::class.java))
-				Toast.makeText(applicationContext, "File Not Found", Toast.LENGTH_LONG).show()
+				Toast.makeText(applicationContext, "Could not open image.", Toast.LENGTH_LONG)
+					.show()
 			}
-
 		}
 		else // Invalid intent.
 		{
@@ -87,12 +106,14 @@ class PhotoEditorActivity : AppCompatActivity()
 	 *
 	 * @author Anthony Bosch
 	 */
-	private fun setupSaveButton() {
+	private fun setupSaveButton()
+	{
 		// Setup view elements.
 		val saveButton = findViewById<Button>(R.id.save)
 
 		// Set onClick behavior.
 		saveButton.setOnClickListener {
+			val bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 			insertImage(contentResolver, bitmap, "image", "description")
 			finish()
 		}
@@ -177,9 +198,11 @@ class PhotoEditorActivity : AppCompatActivity()
 		val exposeButton = findViewById<Button>(R.id.expose)
 
 		exposeButton.setOnClickListener {
+			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 			bitmap = bitmap.copy(bitmap.config, true)
 			bitmap = Exposure.doTransformation(bitmap)
 			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+			bitmapModel.bitmap = bitmap
 		}
 	}
 
@@ -194,9 +217,21 @@ class PhotoEditorActivity : AppCompatActivity()
 		val colorBalanceButton = findViewById<Button>(R.id.balance)
 
 		colorBalanceButton.setOnClickListener {
+			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 			bitmap = bitmap.copy(bitmap.config, true)
 			bitmap = ColorBalance.doTransformation(bitmap)
 			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+			bitmapModel.bitmap = bitmap
 		}
+	}
+
+	/**
+	 * View model so we can save the bitmap during a configuration change (ie orientation change).
+	 *
+	 * @author Will St. Onge
+	 */
+	class BitmapViewModel : ViewModel()
+	{
+		var bitmap: Bitmap? = null
 	}
 }
