@@ -16,14 +16,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProviders
 import com.csc415.photoeditor.model.BitmapViewModel
+import com.csc415.photoeditor.model.BitmapViewModel.Companion.BALANCED_COUNT
+import com.csc415.photoeditor.model.BitmapViewModel.Companion.EXPOSED_COUNT
 import com.csc415.photoeditor.transform.ColorBalance
 import com.csc415.photoeditor.transform.Exposure
 import com.csc415.photoeditor.util.compressImage
 import com.csc415.photoeditor.util.insertImage
 import java.io.*
-
-var EXPOSED_COUNT = 0
-var BALANCED_COUNT = 0
 
 class PhotoEditorActivity : AppCompatActivity()
 {
@@ -117,6 +116,7 @@ class PhotoEditorActivity : AppCompatActivity()
 
 		// Set onClick behavior.
 		saveButton.setOnClickListener {
+			bitmapModel.resetButtonClicks()
 			val bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 			insertImage(contentResolver, bitmap, "image", "description")
 			finish()
@@ -135,6 +135,7 @@ class PhotoEditorActivity : AppCompatActivity()
 
 		// Set the onClick behavior.
 		exitButton.setOnClickListener {
+			bitmapModel.resetButtonClicks()
 			startActivity(Intent(this, MainActivity::class.java))
 		}
 	}

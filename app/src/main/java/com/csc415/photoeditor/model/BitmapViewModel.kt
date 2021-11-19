@@ -12,4 +12,16 @@ class BitmapViewModel : ViewModel()
 {
     var bitmap: Bitmap? = null
     var originalImage: Bitmap? = null
+
+    fun resetButtonClicks() {
+        EXPOSED_COUNT = 0
+        BALANCED_COUNT = 0
+        INVERSION_COUNT = 0
+    }
+
+    companion object {
+        var EXPOSED_COUNT = 0
+        var BALANCED_COUNT = 0
+        var INVERSION_COUNT = 0
+    }
 }
