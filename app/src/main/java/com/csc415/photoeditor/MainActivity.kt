@@ -1,6 +1,7 @@
 package com.csc415.photoeditor
 
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
 import android.os.Bundle
@@ -16,6 +17,7 @@ import androidx.core.content.FileProvider
 import java.io.File
 import java.io.IOException
 import java.util.*
+import com.csc415.photoeditor.util.insertImage
 
 const val PHOTO_URI = "com.csc415.photoeditor.photo_uri"
 
@@ -45,8 +47,15 @@ class MainActivity : AppCompatActivity()
 	private val takePicture = registerForActivityResult(TakePicture())
 	{
 		Log.d(tag, currentPhotoPath)
+		val bitmap = BitmapFactory.decodeFile(currentPhotoPath)
+		val path = insertImage(contentResolver, bitmap, "Image", "Description")
+
+		if (path == null) {
+			Toast.makeText(this, "Image missing or invalid!", Toast.LENGTH_SHORT).show()
+		}
+
 		startActivity(Intent(this, PhotoEditorActivity::class.java).apply {
-			putExtra(PHOTO_URI, currentPhotoPath)
+			putExtra(PHOTO_URI, path)
 		})
 	}
 

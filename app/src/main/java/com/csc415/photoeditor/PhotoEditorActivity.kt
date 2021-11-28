@@ -14,8 +14,10 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProviders
+import com.csc415.photoeditor.model.BitmapViewModel
+import com.csc415.photoeditor.model.BitmapViewModel.Companion.BALANCED_COUNT
+import com.csc415.photoeditor.model.BitmapViewModel.Companion.EXPOSED_COUNT
 import com.csc415.photoeditor.transform.ColorBalance
 import com.csc415.photoeditor.transform.Exposure
 import com.csc415.photoeditor.util.compressImage
@@ -72,6 +74,7 @@ class PhotoEditorActivity : AppCompatActivity()
 						bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
 					)
 					findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+					bitmapModel.originalImage = bitmap
 					bitmapModel.bitmap = bitmap
 				}
 				else findViewById<ImageView>(R.id.photo).setImageBitmap(bitmapModel.bitmap)
@@ -113,6 +116,7 @@ class PhotoEditorActivity : AppCompatActivity()
 
 		// Set onClick behavior.
 		saveButton.setOnClickListener {
+			bitmapModel.resetButtonClicks()
 			val bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 			insertImage(contentResolver, bitmap, "image", "description")
 			finish()
@@ -131,6 +135,7 @@ class PhotoEditorActivity : AppCompatActivity()
 
 		// Set the onClick behavior.
 		exitButton.setOnClickListener {
+			bitmapModel.resetButtonClicks()
 			startActivity(Intent(this, MainActivity::class.java))
 		}
 	}
@@ -198,11 +203,17 @@ class PhotoEditorActivity : AppCompatActivity()
 		val exposeButton = findViewById<Button>(R.id.expose)
 
 		exposeButton.setOnClickListener {
-			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
-			bitmap = bitmap.copy(bitmap.config, true)
-			bitmap = Exposure.doTransformation(bitmap)
-			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
-			bitmapModel.bitmap = bitmap
+			if (EXPOSED_COUNT % 2 == 0) {
+				var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
+				bitmap = bitmap.copy(bitmap.config, true)
+				bitmap = Exposure.doTransformation(bitmap)
+				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+				bitmap.also { bitmapModel.bitmap = it }
+			}
+			else {
+				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmapModel.originalImage)
+			}
+			EXPOSED_COUNT++
 		}
 	}
 
@@ -217,21 +228,17 @@ class PhotoEditorActivity : AppCompatActivity()
 		val colorBalanceButton = findViewById<Button>(R.id.balance)
 
 		colorBalanceButton.setOnClickListener {
-			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
-			bitmap = bitmap.copy(bitmap.config, true)
-			bitmap = ColorBalance.doTransformation(bitmap)
-			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
-			bitmapModel.bitmap = bitmap
+			if (BALANCED_COUNT % 2 == 0) {
+				var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
+				bitmap = bitmap.copy(bitmap.config, true)
+				bitmap = ColorBalance.doTransformation(bitmap)
+				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+				bitmap.also { bitmapModel.bitmap = it }
+			}
+			else {
+				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmapModel.originalImage)
+			}
+			BALANCED_COUNT++
 		}
-	}
-
-	/**
-	 * View model so we can save the bitmap during a configuration change (ie orientation change).
-	 *
-	 * @author Will St. Onge
-	 */
-	class BitmapViewModel : ViewModel()
-	{
-		var bitmap: Bitmap? = null
 	}
 }
