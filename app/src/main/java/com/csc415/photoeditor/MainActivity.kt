@@ -33,7 +33,6 @@ class MainActivity : AppCompatActivity()
 	 */
 	private val getContent = registerForActivityResult(GetContent())
 	{
-		Log.d(tag, it.toString())
 		startActivity(Intent(this, PhotoEditorActivity::class.java).apply {
 			putExtra(PHOTO_URI, it.toString())
 		})
@@ -46,17 +45,15 @@ class MainActivity : AppCompatActivity()
 	 */
 	private val takePicture = registerForActivityResult(TakePicture())
 	{
-		Log.d(tag, currentPhotoPath)
 		val bitmap = BitmapFactory.decodeFile(currentPhotoPath)
 		val path = insertImage(contentResolver, bitmap, "Image", "Description")
 
-		if (path == null) {
+		if (path == null)
 			Toast.makeText(this, "Image missing or invalid!", Toast.LENGTH_SHORT).show()
-		}
-
-		startActivity(Intent(this, PhotoEditorActivity::class.java).apply {
-			putExtra(PHOTO_URI, path)
-		})
+		else
+			startActivity(Intent(this, PhotoEditorActivity::class.java).apply {
+				putExtra(PHOTO_URI, path)
+			})
 	}
 
 	/**
