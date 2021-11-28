@@ -1,23 +1,15 @@
 package com.csc415.photoeditor.util
 
-import android.app.Activity
-import android.content.Context
-import android.content.pm.PackageManager
+import android.content.ContentResolver
+import android.content.ContentValues
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.os.Environment
-import android.widget.Toast
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import com.csc415.photoeditor.REQUEST_CODE
-import java.io.File
-import java.io.FileOutputStream
+import android.provider.MediaStore
 import android.util.Pair
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import java.lang.IllegalArgumentException
 
 /**
  * Finds the whitest pixel so we can automatically expose the image.
@@ -58,67 +50,6 @@ fun findWhitestPixel(input: Bitmap): Pair<Int, Int>
 
 	return pixelCoordinates
 }
-
-/**
- * Saves a file by first checking the permissions to the external storage. If the permission to
- * external storage is set, the image will be saved, otherwise a dialog appears asking permission to
- * access the external storage.
- *
- * @param bitmap The bitmap object to save.
- * @param context The context in which the image is saved (typically the calling activity).
- *
- * @author Anthony Bosch
- */
-fun saveToInternalStorage(bitmap: Bitmap, context: Context)
-{
-	if (ContextCompat.checkSelfPermission(
-			context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-		) == PackageManager.PERMISSION_GRANTED
-	) saveImage(bitmap, context)
-	else askPermission(context)
-}
-
-/**
- * Creates a storage directory in the device's file manager where the bitmap will be saved. Uses a
- * FileOutputStream to compress and save the file under a name that includes the current timestamp
- * ensuring each image will be unique.
- *
- * @param bitmap The bitmap object to save.
- * @param context The context in which the image is saved (typically the calling activity).
- *
- * @author Anthony Bosch
- */
-private fun saveImage(bitmap: Bitmap, context: Context)
-{
-	val dir = File(Environment.getExternalStorageDirectory(), "SaveImage")
-
-	if (!dir.exists()) dir.mkdir()
-
-	val file = File(dir, "${System.currentTimeMillis()}.jpg")
-	FileOutputStream(file).use { stream ->
-		bitmap.compress(Bitmap.CompressFormat.PNG, 95, stream)
-	}
-
-	Toast.makeText(context, "Saved file!", Toast.LENGTH_SHORT).show()
-}
-
-/**
- * Requests permission for writing to external storage along with the context and REQUEST_CODE which
- * is equal to 100.
- *
- * @param context The context in which the permission is being requested (typically the calling
- * activity).
- *
- * @author Anthony Bosch
- */
-private fun askPermission(context: Context)
-{
-	ActivityCompat.requestPermissions(
-		context as Activity,
-		arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
-		REQUEST_CODE
-	)
-}
   
 /**
  * Scales and compresses a Bitmap while preserving the aspect ratio of the image.
@@ -149,8 +80,7 @@ fun compressImage(stream: InputStream, maxWidth: Int, maxHeight: Int): Bitmap
  */
 fun compressImage(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap
 {
-	if (maxHeight < 1 || maxWidth < 1)
-		throw IllegalArgumentException("Height and width must be at least 1.")
+	if (maxHeight < 1 || maxWidth < 1) throw IllegalArgumentException("Height and width must be at least 1.")
 
 	var image = bitmap
 	val ratioBitmap = image.width.toFloat() / image.height.toFloat()
@@ -158,10 +88,8 @@ fun compressImage(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap
 	var finalWidth = maxWidth
 	var finalHeight = maxHeight
 
-	if (ratioMax > ratioBitmap)
-		finalWidth = (maxHeight.toFloat() * ratioBitmap).toInt()
-	else
-		finalHeight = (maxWidth.toFloat() / ratioBitmap).toInt()
+	if (ratioMax > ratioBitmap) finalWidth = (maxHeight.toFloat() * ratioBitmap).toInt()
+	else finalHeight = (maxWidth.toFloat() / ratioBitmap).toInt()
 
 	image = Bitmap.createScaledBitmap(image, finalWidth, finalHeight, true)
 
@@ -169,4 +97,53 @@ fun compressImage(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap
 	image.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
 
 	return BitmapFactory.decodeStream(ByteArrayInputStream(outputStream.toByteArray()))
+}
+
+/**
+ * Saves a file to the gallery by setting values specific to the image and using the ContentResolver
+ * to create a URI where the image will be stored.
+ *
+ * @param cr The ContentResolver that is being passed from the PhotoEditorActivity
+ * @param source The bitmap that is passed from the PhotoEditorActivity
+ * @param title Title of the new image to be stored in the gallery
+ * @param description Description of the new image to be stored in the gallery
+ *
+ * @author Anthony Bosch
+ */
+fun insertImage(cr: ContentResolver, source: Bitmap, title: String, description: String): String?
+{
+	return try
+	{
+		val url = cr.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, setContentValues(title, description))!!
+
+		cr.openOutputStream(url).use {
+			source.compress(Bitmap.CompressFormat.PNG, 100, it)
+		}
+		url.toString()
+	}
+	catch (e: Exception)
+	{
+		null
+	}
+}
+
+/**
+ * Sets the values for a specific bitmap
+ *
+ * @param title
+ * @param description
+ *
+ * @author Anthony Bosch
+ */
+private fun setContentValues(title: String?, description: String?): ContentValues
+{
+	return ContentValues().apply {
+		put(MediaStore.Images.Media.TITLE, title)
+		put(MediaStore.Images.Media.DISPLAY_NAME, title)
+		put(MediaStore.Images.Media.DESCRIPTION, description)
+		put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+		// Add the date meta data to ensure the image is added at the front of the gallery
+		put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis())
+		put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
+	}
 }
