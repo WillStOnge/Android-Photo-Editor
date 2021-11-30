@@ -3,6 +3,7 @@ package com.csc415.photoeditor
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
@@ -19,6 +20,7 @@ import com.csc415.photoeditor.model.BitmapViewModel
 import com.csc415.photoeditor.model.BitmapViewModel.Companion.BALANCED_COUNT
 import com.csc415.photoeditor.model.BitmapViewModel.Companion.EXPOSED_COUNT
 import com.csc415.photoeditor.transform.ColorBalance
+import com.csc415.photoeditor.transform.ColorInvert
 import com.csc415.photoeditor.transform.Exposure
 import com.csc415.photoeditor.util.compressImage
 import com.csc415.photoeditor.util.insertImage
@@ -102,6 +104,24 @@ class PhotoEditorActivity : AppCompatActivity()
 		setupExposureButton()
 		setupColorBalance()
 		setupSaveButton()
+		setUpColorInvert()
+	}
+	/**
+	 * Sets up Color inversion
+	 *
+	 * @author Trevor Sears
+	 */
+
+	private fun setUpColorInvert() {
+		val colorInvert = findViewById<Button>(R.id.invert)
+		colorInvert.setOnClickListener{
+			colorInvert.setTextColor(Color.CYAN)
+			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
+			bitmap = bitmap.copy(bitmap.config, true)
+			bitmap = ColorInvert.doTransformation(bitmap)
+			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+			bitmap.also { bitmapModel.bitmap = it }
+		}
 	}
 
 	/**
@@ -152,6 +172,8 @@ class PhotoEditorActivity : AppCompatActivity()
 
 		// Set the onClick behavior.
 		shareButton.setOnClickListener {
+			//added color change to button when clicked Trevor
+			shareButton.setTextColor(Color.CYAN)
 			// Save file to disk in a temp file.
 			val file = File(
 				getExternalFilesDir(Environment.DIRECTORY_PICTURES),
@@ -203,6 +225,8 @@ class PhotoEditorActivity : AppCompatActivity()
 		val exposeButton = findViewById<Button>(R.id.expose)
 
 		exposeButton.setOnClickListener {
+			//added color change to button when clicked Trevor
+			exposeButton.setTextColor(Color.CYAN)
 			if (EXPOSED_COUNT % 2 == 0) {
 				var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 				bitmap = bitmap.copy(bitmap.config, true)
@@ -228,6 +252,8 @@ class PhotoEditorActivity : AppCompatActivity()
 		val colorBalanceButton = findViewById<Button>(R.id.balance)
 
 		colorBalanceButton.setOnClickListener {
+			//added color change to button when clicked Trevor
+			colorBalanceButton.setTextColor(Color.CYAN)
 			if (BALANCED_COUNT % 2 == 0) {
 				var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 				bitmap = bitmap.copy(bitmap.config, true)
