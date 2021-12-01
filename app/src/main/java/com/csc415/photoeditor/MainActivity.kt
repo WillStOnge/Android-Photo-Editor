@@ -14,10 +14,10 @@ import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.activity.result.contract.ActivityResultContracts.TakePicture
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import com.csc415.photoeditor.util.insertImage
 import java.io.File
 import java.io.IOException
 import java.util.*
-import com.csc415.photoeditor.util.insertImage
 
 const val PHOTO_URI = "com.csc415.photoeditor.photo_uri"
 
@@ -31,8 +31,7 @@ class MainActivity : AppCompatActivity()
 	 *
 	 * @author Will St. Onge
 	 */
-	private val getContent = registerForActivityResult(GetContent())
-	{
+	private val getContent = registerForActivityResult(GetContent()) {
 		startActivity(Intent(this, PhotoEditorActivity::class.java).apply {
 			putExtra(PHOTO_URI, it.toString())
 		})
@@ -43,17 +42,15 @@ class MainActivity : AppCompatActivity()
 	 *
 	 * @author Will St. Onge
 	 */
-	private val takePicture = registerForActivityResult(TakePicture())
-	{
+	private val takePicture = registerForActivityResult(TakePicture()) {
 		val bitmap = BitmapFactory.decodeFile(currentPhotoPath)
 		val path = insertImage(contentResolver, bitmap, "Image", "Description")
 
-		if (path == null)
-			Toast.makeText(this, "Image missing or invalid!", Toast.LENGTH_SHORT).show()
-		else
-			startActivity(Intent(this, PhotoEditorActivity::class.java).apply {
-				putExtra(PHOTO_URI, path)
-			})
+		if (path == null) Toast.makeText(this, "Image missing or invalid!", Toast.LENGTH_SHORT)
+			.show()
+		else startActivity(Intent(this, PhotoEditorActivity::class.java).apply {
+			putExtra(PHOTO_URI, path)
+		})
 	}
 
 	/**

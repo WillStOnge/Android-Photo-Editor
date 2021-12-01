@@ -50,7 +50,7 @@ fun findWhitestPixel(input: Bitmap): Pair<Int, Int>
 
 	return pixelCoordinates
 }
-  
+
 /**
  * Scales and compresses a Bitmap while preserving the aspect ratio of the image.
  *
@@ -114,7 +114,10 @@ fun insertImage(cr: ContentResolver, source: Bitmap, title: String, description:
 {
 	return try
 	{
-		val url = cr.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, setContentValues(title, description))!!
+		val url = cr.insert(
+			MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+			setContentValues(title, description)
+		)!!
 
 		cr.openOutputStream(url).use {
 			source.compress(Bitmap.CompressFormat.PNG, 100, it)

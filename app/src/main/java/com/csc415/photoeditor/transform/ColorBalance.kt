@@ -45,8 +45,7 @@ object ColorBalance : ITransformation
 
 
 		// If the color balance is equal, then skip this step.
-		if (red == blue && blue == green)
-			return input
+		if (red == blue && blue == green) return input
 
 		var lowColor = red
 

@@ -38,8 +38,7 @@ object Exposure : ITransformation
 		val adjust = 255 - Color.red(input.getPixel(pixelX, pixelY))
 
 		// If the pixel is already 100% red, then we don't need to do anything.
-		if (Color.red(input.getPixel(pixelX, pixelY)) == 255)
-			return input
+		if (Color.red(input.getPixel(pixelX, pixelY)) == 255) return input
 
 		val width = input.width
 		val height = input.height
@@ -63,7 +62,7 @@ object Exposure : ITransformation
 			pixels[i] = (Color.alpha(pixels[i]) shl 24) or (red shl 16) or (green shl 8) or blue
 		}
 
-		input.setPixels(pixels, 0, width, 0,0, width, height)
+		input.setPixels(pixels, 0, width, 0, 0, width, height)
 
 		return input
 	}

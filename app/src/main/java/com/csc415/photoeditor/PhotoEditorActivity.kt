@@ -106,15 +106,17 @@ class PhotoEditorActivity : AppCompatActivity()
 		setupSaveButton()
 		setUpColorInvert()
 	}
+
 	/**
 	 * Sets up Color inversion
 	 *
 	 * @author Trevor Sears
 	 */
 
-	private fun setUpColorInvert() {
+	private fun setUpColorInvert()
+	{
 		val colorInvert = findViewById<Button>(R.id.invert)
-		colorInvert.setOnClickListener{
+		colorInvert.setOnClickListener {
 			colorInvert.setTextColor(Color.CYAN)
 			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 			bitmap = bitmap.copy(bitmap.config, true)
@@ -227,14 +229,16 @@ class PhotoEditorActivity : AppCompatActivity()
 		exposeButton.setOnClickListener {
 			//added color change to button when clicked Trevor
 			exposeButton.setTextColor(Color.CYAN)
-			if (EXPOSED_COUNT % 2 == 0) {
+			if (EXPOSED_COUNT % 2 == 0)
+			{
 				var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 				bitmap = bitmap.copy(bitmap.config, true)
 				bitmap = Exposure.doTransformation(bitmap)
 				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
 				bitmap.also { bitmapModel.bitmap = it }
 			}
-			else {
+			else
+			{
 				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmapModel.originalImage)
 			}
 			EXPOSED_COUNT++
@@ -254,14 +258,16 @@ class PhotoEditorActivity : AppCompatActivity()
 		colorBalanceButton.setOnClickListener {
 			//added color change to button when clicked Trevor
 			colorBalanceButton.setTextColor(Color.CYAN)
-			if (BALANCED_COUNT % 2 == 0) {
+			if (BALANCED_COUNT % 2 == 0)
+			{
 				var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 				bitmap = bitmap.copy(bitmap.config, true)
 				bitmap = ColorBalance.doTransformation(bitmap)
 				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
 				bitmap.also { bitmapModel.bitmap = it }
 			}
-			else {
+			else
+			{
 				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmapModel.originalImage)
 			}
 			BALANCED_COUNT++
