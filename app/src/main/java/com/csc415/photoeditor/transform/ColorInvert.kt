@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 
 object ColorInvert : ITransformation
 {
-	private val RGB_MASK: Int = 0x00FFFFFF
+	private const val RGB_MASK: Int = 0x00FFFFFF
 
 	/**
 	 * Inverts the colors of an image.
@@ -26,10 +26,9 @@ object ColorInvert : ITransformation
 		val pixels = IntArray(pixelCount)
 		inversionBitmap.getPixels(pixels, 0, width, 0, 0, width, height)
 
-		for (i in 0 until pixelCount)
-			pixels[i] = pixels[i] xor RGB_MASK
+		for (i in 0 until pixelCount) pixels[i] = pixels[i] xor RGB_MASK
 
-		inversionBitmap.setPixels(pixels, 0, width, 0,0, width, height)
+		inversionBitmap.setPixels(pixels, 0, width, 0, 0, width, height)
 
 		return inversionBitmap
 	}
