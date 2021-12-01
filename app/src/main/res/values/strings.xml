@@ -7,6 +7,7 @@
     <string name="share">Share</string>
     <string name="expose">expose</string>
     <string name="balance">balance</string>
-    <string name="save">Save</string>
+    <string name="save">Save and Exit</string>
     <string name="send_to">Send to</string>
+    <string name="invert_colors">Invert Colors</string>
 </resources>
