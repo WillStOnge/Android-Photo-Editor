@@ -17,8 +17,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProviders
 import com.csc415.photoeditor.model.BitmapViewModel
-import com.csc415.photoeditor.model.BitmapViewModel.Companion.BALANCED_COUNT
-import com.csc415.photoeditor.model.BitmapViewModel.Companion.EXPOSED_COUNT
 import com.csc415.photoeditor.transform.ColorBalance
 import com.csc415.photoeditor.transform.ColorInvert
 import com.csc415.photoeditor.transform.Exposure
@@ -101,10 +99,21 @@ class PhotoEditorActivity : AppCompatActivity()
 
 		setupExitButton()
 		setupShareButton()
+		setupSaveButton()
+		setupUndoButton()
 		setupExposureButton()
 		setupColorBalance()
-		setupSaveButton()
 		setUpColorInvert()
+	}
+
+	private fun setupUndoButton() {
+		val undo = findViewById<Button>(R.id.undo)
+		undo.setOnClickListener {
+			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmapModel.originalImage)
+			findViewById<Button>(R.id.invert).setTextColor(Color.YELLOW)
+			findViewById<Button>(R.id.expose).setTextColor(Color.YELLOW)
+			findViewById<Button>(R.id.balance).setTextColor(Color.YELLOW)
+		}
 	}
 
 	/**
@@ -138,7 +147,6 @@ class PhotoEditorActivity : AppCompatActivity()
 
 		// Set onClick behavior.
 		saveButton.setOnClickListener {
-			bitmapModel.resetButtonClicks()
 			val bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
 			insertImage(contentResolver, bitmap, "image", "description")
 			finish()
@@ -157,7 +165,6 @@ class PhotoEditorActivity : AppCompatActivity()
 
 		// Set the onClick behavior.
 		exitButton.setOnClickListener {
-			bitmapModel.resetButtonClicks()
 			startActivity(Intent(this, MainActivity::class.java))
 		}
 	}
@@ -229,19 +236,11 @@ class PhotoEditorActivity : AppCompatActivity()
 		exposeButton.setOnClickListener {
 			//added color change to button when clicked Trevor
 			exposeButton.setTextColor(Color.CYAN)
-			if (EXPOSED_COUNT % 2 == 0)
-			{
-				var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
-				bitmap = bitmap.copy(bitmap.config, true)
-				bitmap = Exposure.doTransformation(bitmap)
-				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
-				bitmap.also { bitmapModel.bitmap = it }
-			}
-			else
-			{
-				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmapModel.originalImage)
-			}
-			EXPOSED_COUNT++
+			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
+			bitmap = bitmap.copy(bitmap.config, true)
+			bitmap = Exposure.doTransformation(bitmap)
+			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+			bitmap.also { bitmapModel.bitmap = it }
 		}
 	}
 
@@ -258,19 +257,11 @@ class PhotoEditorActivity : AppCompatActivity()
 		colorBalanceButton.setOnClickListener {
 			//added color change to button when clicked Trevor
 			colorBalanceButton.setTextColor(Color.CYAN)
-			if (BALANCED_COUNT % 2 == 0)
-			{
-				var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
-				bitmap = bitmap.copy(bitmap.config, true)
-				bitmap = ColorBalance.doTransformation(bitmap)
-				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
-				bitmap.also { bitmapModel.bitmap = it }
-			}
-			else
-			{
-				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmapModel.originalImage)
-			}
-			BALANCED_COUNT++
+			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
+			bitmap = bitmap.copy(bitmap.config, true)
+			bitmap = ColorBalance.doTransformation(bitmap)
+			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+			bitmap.also { bitmapModel.bitmap = it }
 		}
 	}
 }
