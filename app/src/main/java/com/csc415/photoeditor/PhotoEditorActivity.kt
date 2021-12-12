@@ -15,22 +15,27 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.core.view.forEach
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.csc415.photoeditor.model.BitmapViewModel
-import com.csc415.photoeditor.model.BitmapViewModel.Companion.BALANCED_COUNT
-import com.csc415.photoeditor.model.BitmapViewModel.Companion.EXPOSED_COUNT
 import com.csc415.photoeditor.transform.ColorBalance
 import com.csc415.photoeditor.transform.ColorInvert
 import com.csc415.photoeditor.transform.Exposure
-import com.csc415.photoeditor.util.compressImage
-import com.csc415.photoeditor.util.insertImage
+import com.csc415.photoeditor.util.*
 import java.io.*
+import java.util.*
 
 class PhotoEditorActivity : AppCompatActivity()
 {
 	private val tag = this::class.java.simpleName
 	private lateinit var imageUri: String
 	private lateinit var bitmapModel: BitmapViewModel
+
+	private val mEditorButtonList = LinkedList<EditorButtonEnum>()
+	private lateinit var mRecyclerView: RecyclerView
+	private lateinit var mAdapter: ListAdapter
 
 	/**
 	 * Method will be called when the activity is created. It will load the bitmap from disk and setup the buttons at the bottom of the page.
@@ -98,13 +103,38 @@ class PhotoEditorActivity : AppCompatActivity()
 			Log.w(tag, "No IMAGE_URI was sent with Intent. Falling back to MainActivity")
 			startActivity(Intent(this, MainActivity::class.java))
 		}
+		createButtons()
+		mRecyclerView = findViewById(R.id.recyclerview)
+		mAdapter = ListAdapter(this,
+			mEditorButtonList,object : ClickListener {
+				override fun onPositionClicked(mPosition: Int) {
+					when (mEditorButtonList[mPosition]){
+						EditorButtonEnum.BALANCE -> colorBalance()
+						EditorButtonEnum.EXPOSE -> exposure()
+						EditorButtonEnum.INVERT_COLORS -> invertColors()
+						EditorButtonEnum.SAVE -> save()
+						EditorButtonEnum.SHARE -> share()
+						EditorButtonEnum.EXIT -> exit()
+						EditorButtonEnum.UNDO -> undo()
+					}
+				}
+			})
 
-		setupExitButton()
-		setupShareButton()
-		setupExposureButton()
-		setupColorBalance()
-		setupSaveButton()
-		setUpColorInvert()
+		mRecyclerView.adapter = mAdapter
+		mRecyclerView.layoutManager = LinearLayoutManager(
+			this, LinearLayoutManager.HORIZONTAL,false)
+	}
+
+
+	private fun createButtons() {
+		EditorButtonEnum.values().forEach { mEditorButtonList.add(it) }
+	}
+
+	private fun undo() {
+		findViewById<ImageView>(R.id.photo).setImageBitmap(bitmapModel.originalImage)
+//		findViewById<Button>(R.id.button_editor).setTextColor(Color.YELLOW)
+//		findViewById<Button>(R.id.expose).setTextColor(Color.YELLOW)
+//		findViewById<Button>(R.id.balance).setTextColor(Color.YELLOW)
 	}
 
 	/**
@@ -113,17 +143,14 @@ class PhotoEditorActivity : AppCompatActivity()
 	 * @author Trevor Sears
 	 */
 
-	private fun setUpColorInvert()
+	private fun invertColors()
 	{
-		val colorInvert = findViewById<Button>(R.id.invert)
-		colorInvert.setOnClickListener {
-			colorInvert.setTextColor(Color.CYAN)
-			var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
-			bitmap = bitmap.copy(bitmap.config, true)
-			bitmap = ColorInvert.doTransformation(bitmap)
-			findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
-			bitmap.also { bitmapModel.bitmap = it }
-		}
+		//findViewById<Button>(R.id.button_editor).setTextColor(Color.CYAN)
+		var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
+		bitmap = bitmap.copy(bitmap.config, true)
+		bitmap = ColorInvert.doTransformation(bitmap)
+		findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+		bitmap.also { bitmapModel.bitmap = it }
 	}
 
 	/**
@@ -131,18 +158,11 @@ class PhotoEditorActivity : AppCompatActivity()
 	 *
 	 * @author Anthony Bosch
 	 */
-	private fun setupSaveButton()
+	private fun save()
 	{
-		// Setup view elements.
-		val saveButton = findViewById<Button>(R.id.save)
-
-		// Set onClick behavior.
-		saveButton.setOnClickListener {
-			bitmapModel.resetButtonClicks()
-			val bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
-			insertImage(contentResolver, bitmap, "image", "description")
-			finish()
-		}
+		val bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
+		insertImage(contentResolver, bitmap, "image", "description")
+		finish()
 	}
 
 	/**
@@ -150,16 +170,9 @@ class PhotoEditorActivity : AppCompatActivity()
 	 *
 	 * @author Will St. Onge
 	 */
-	private fun setupExitButton()
+	private fun exit()
 	{
-		// Setup view elements.
-		val exitButton = findViewById<Button>(R.id.exit)
-
-		// Set the onClick behavior.
-		exitButton.setOnClickListener {
-			bitmapModel.resetButtonClicks()
-			startActivity(Intent(this, MainActivity::class.java))
-		}
+		startActivity(Intent(this, MainActivity::class.java))
 	}
 
 	/**
@@ -167,53 +180,46 @@ class PhotoEditorActivity : AppCompatActivity()
 	 *
 	 * @author Will St. Onge
 	 */
-	private fun setupShareButton()
+	private fun share()
 	{
-		// Setup view elements.
-		val shareButton = findViewById<Button>(R.id.share)
+		//added color change to button when clicked Trevor
+		//shareButton.setTextColor(Color.CYAN)
+		// Save file to disk in a temp file.
+		val file = File(
+			getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+			"temp_${System.currentTimeMillis()}.png"
+		)
+		val stream = FileOutputStream(file)
+		val bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
+		bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+		stream.close()
 
-		// Set the onClick behavior.
-		shareButton.setOnClickListener {
-			//added color change to button when clicked Trevor
-			shareButton.setTextColor(Color.CYAN)
-			// Save file to disk in a temp file.
-			val file = File(
-				getExternalFilesDir(Environment.DIRECTORY_PICTURES),
-				"temp_${System.currentTimeMillis()}.png"
-			)
-			val stream = FileOutputStream(file)
-			val bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
-			bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-			stream.close()
+		// Gets the file URI from the file provider.
+		val uri = FileProvider.getUriForFile(
+			applicationContext, "${applicationContext.packageName}.fileprovider", file
+		)
 
-			// Gets the file URI from the file provider.
-			val uri = FileProvider.getUriForFile(
-				applicationContext, "${applicationContext.packageName}.fileprovider", file
-			)
-
-			// Share image to the system.
-			val intent = Intent().apply {
-				type = "image/*"
-				action = Intent.ACTION_SEND
-				addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-				putExtra(Intent.EXTRA_STREAM, uri)
-			}
-
-			// Create the chooser intent.
-			val chooser = Intent.createChooser(intent, "Share to")
-
-			// Grant permission to the image so the system can access it.
-			packageManager.queryIntentActivities(chooser, PackageManager.MATCH_DEFAULT_ONLY)
-				.forEach {
-					grantUriPermission(
-						it.activityInfo.packageName,
-						uri,
-						Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION
-					)
-				}
-
-			startActivity(chooser)
+		// Share image to the system.
+		val intent = Intent().apply {
+			type = "image/*"
+			action = Intent.ACTION_SEND
+			addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+			putExtra(Intent.EXTRA_STREAM, uri)
 		}
+
+		// Create the chooser intent.
+		val chooser = Intent.createChooser(intent, "Share to")
+
+		// Grant permission to the image so the system can access it.
+		packageManager.queryIntentActivities(chooser, PackageManager.MATCH_DEFAULT_ONLY)
+			.forEach {
+				grantUriPermission(
+					it.activityInfo.packageName,
+					uri,
+					Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION
+				)
+			}
+		startActivity(chooser)
 	}
 
 	/**
@@ -221,28 +227,15 @@ class PhotoEditorActivity : AppCompatActivity()
 	 *
 	 * @author Will St. Onge
 	 */
-	private fun setupExposureButton()
+	private fun exposure()
 	{
-		// Setup view elements.
-		val exposeButton = findViewById<Button>(R.id.expose)
-
-		exposeButton.setOnClickListener {
-			//added color change to button when clicked Trevor
-			exposeButton.setTextColor(Color.CYAN)
-			if (EXPOSED_COUNT % 2 == 0)
-			{
-				var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
-				bitmap = bitmap.copy(bitmap.config, true)
-				bitmap = Exposure.doTransformation(bitmap)
-				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
-				bitmap.also { bitmapModel.bitmap = it }
-			}
-			else
-			{
-				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmapModel.originalImage)
-			}
-			EXPOSED_COUNT++
-		}
+		//added color change to button when clicked Trevor
+		//exposeButton.setTextColor(Color.CYAN)
+		var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
+		bitmap = bitmap.copy(bitmap.config, true)
+		bitmap = Exposure.doTransformation(bitmap)
+		findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+		bitmap.also { bitmapModel.bitmap = it }
 	}
 
 	/**
@@ -250,27 +243,14 @@ class PhotoEditorActivity : AppCompatActivity()
 	 *
 	 * @author Anthony Bosch
 	 */
-	private fun setupColorBalance()
+	private fun colorBalance()
 	{
-		// Setup view elements
-		val colorBalanceButton = findViewById<Button>(R.id.balance)
-
-		colorBalanceButton.setOnClickListener {
-			//added color change to button when clicked Trevor
-			colorBalanceButton.setTextColor(Color.CYAN)
-			if (BALANCED_COUNT % 2 == 0)
-			{
-				var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
-				bitmap = bitmap.copy(bitmap.config, true)
-				bitmap = ColorBalance.doTransformation(bitmap)
-				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
-				bitmap.also { bitmapModel.bitmap = it }
-			}
-			else
-			{
-				findViewById<ImageView>(R.id.photo).setImageBitmap(bitmapModel.originalImage)
-			}
-			BALANCED_COUNT++
-		}
+		//added color change to button when clicked Trevor
+		//colorBalanceButton.setTextColor(Color.CYAN)
+		var bitmap = (findViewById<ImageView>(R.id.photo).drawable as BitmapDrawable).bitmap
+		bitmap = bitmap.copy(bitmap.config, true)
+		bitmap = ColorBalance.doTransformation(bitmap)
+		findViewById<ImageView>(R.id.photo).setImageBitmap(bitmap)
+		bitmap.also { bitmapModel.bitmap = it }
 	}
 }
